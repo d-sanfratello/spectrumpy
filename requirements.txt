@@ -2,3 +2,13 @@ astropy
 matplotlib
 numpy<=1.23.0
 scipy
+
+pkgconfig
+h5py
+msgpack-python
+protobuf
+grpcio
+filelock
+ray>=1.13
+ipympl
+jupyterlab
