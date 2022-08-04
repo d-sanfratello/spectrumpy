@@ -1,22 +1,23 @@
 import numpy as np
 from setuptools import setup
-from setuptools.command.build_ext import build_ext as _build_ext
+# from setuptools.command.build_ext import build_ext as _build_ext
 from codecs import open
 
-# try:
-#     import figaro
-# except ImportError:
-#     raise Exception("This package is based on `figaro` package. To install it "
-#                     "follow instructions at "
-#                     "https://github.com/sterinaldi/figaro.")
+try:
+    import cpnest
+except ImportError:
+    raise Exception("This package needs `cpnest`. To install it follow "
+    "instructions at "
+    "https://github.com/johnveitch/cpnest/tree/massively_parallel.")
 
-# see https://stackoverflow.com/a/21621689/1862861 for why this is here
-class build_ext(_build_ext):
-    def finalize_options(self):
-        _build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        __builtins__.__NUMPY_SETUP__ = False
-        self.include_dirs.append(np.get_include())
+#
+# # see https://stackoverflow.com/a/21621689/1862861 for why this is here
+# class build_ext(_build_ext):
+#     def finalize_options(self):
+#         _build_ext.finalize_options(self)
+#         # Prevent numpy from thinking it is still in its setup process:
+#         __builtins__.__NUMPY_SETUP__ = False
+#         self.include_dirs.append(np.get_include())
 
 
 with open("requirements.txt") as requires_file:
