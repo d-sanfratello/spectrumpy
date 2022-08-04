@@ -5,7 +5,7 @@ import warnings
 from astropy.io import fits
 from numbers import Number
 from os.path import join
-from path import Path
+from pathlib import Path
 
 from scipy.ndimage import rotate
 from scipy.ndimage import median_filter
