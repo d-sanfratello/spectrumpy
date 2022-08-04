@@ -4,7 +4,6 @@ import warnings
 
 from astropy.io import fits
 from numbers import Number
-from os.path import join
 from pathlib import Path
 
 from scipy.ndimage import rotate
@@ -58,20 +57,22 @@ class Spectrum:
             raise TypeError("`log` must be a bool.")
 
         fig = plt.figure(*args, **kwargs)
-        ax = fig.gca()
+        ax1 = fig.add_subplot(121)
         if log:
-            ax.imshow(np.log10(self.s_image))
+            ax1.imshow(np.log10(self.s_image))
         else:
-            ax.imshow(self.s_image)
+            ax1.imshow(self.s_image)
 
-        fig = plt.figure(*args, **kwargs)
-        ax = fig.gca()
+        ax2 = fig.add_subplot(122)
         if log:
-            ax.imshow(np.log10(self.l_image))
+            ax2.imshow(np.log10(self.l_image))
         else:
-            ax.imshow(self.l_image)
+            ax2.imshow(self.l_image)
 
         plt.show()
+
+    def find_rotation_angle(self, points, error_y, error_x=None):
+        pass
 
     def run_integration(self):
         self.s_int = np.sum(self.s_image, axis=0)
