@@ -3,6 +3,7 @@ import numpy as np
 import warnings
 
 from astropy.io import fits
+from cpnest import CPNest
 from numbers import Number
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from .datasets import DataSets
 from .fit import FitStatus
 from .mhspectrasampler import functions as fs
 from .mhspectrasampler import MHsampler
+from spectrumpy.bayes_inference import RotationPosterior
 
 
 class Spectrum:
@@ -59,20 +61,50 @@ class Spectrum:
         fig = plt.figure(*args, **kwargs)
         ax1 = fig.add_subplot(121)
         if log:
-            ax1.imshow(np.log10(self.s_image))
+            ax1.imshow(np.log10(self.s_image), origin='lower')
         else:
-            ax1.imshow(self.s_image)
+            ax1.imshow(self.s_image, origin='lower')
 
         ax2 = fig.add_subplot(122)
         if log:
-            ax2.imshow(np.log10(self.l_image))
+            ax2.imshow(np.log10(self.l_image), origin='lower')
         else:
-            ax2.imshow(self.l_image)
+            ax2.imshow(self.l_image, origin='lower')
 
         plt.show()
 
-    def find_rotation_angle(self, points, error_y, error_x=None):
-        pass
+    def find_rotation_angle(self,
+                            x, y,
+                            error_y, error_x=None,
+                            bounds=[[-np.inf, np.inf],
+                                    [-np.inf, np.inf]]):
+
+        if error_x is None:
+            error_x = np.zeros_like(x)
+
+        x = np.array(x)
+        y = np.array(y)
+        error_y = np.array(error_y)
+
+        rot_angle = RotationPosterior(x, y,
+                                      error_x, error_y,
+                                      bounds)
+
+        job = CPNest(
+            rot_angle,
+            verbose=1,
+            nlive=1000,
+            maxmcmc=1500,
+            nnest=4,
+            nensemble=4,
+            seed=1234
+        )
+
+        job.run()
+
+        post = job.posterior_samples.ravel()
+
+        return post
 
     def run_integration(self):
         self.s_int = np.sum(self.s_image, axis=0)
