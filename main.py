@@ -1,7 +1,7 @@
 import numpy as np
 
 from os.path import join
-from path import Path
+from pathlib import Path
 
 from spectrumpy import Spectrum
 
