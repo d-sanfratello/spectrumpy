@@ -9,6 +9,9 @@ msgpack-python
 protobuf
 grpcio
 filelock
-ray>=1.13
+ray>=1.13.0
+
 ipympl
 jupyterlab
+
+corner
