@@ -5,16 +5,16 @@ from cpnest import model
 
 class RotationPosterior(model.Model):
     def __init__(self, x, y, sx, sy, bounds):
-        self.x = x
-        self.y = y
+        self.x = np.array(x)
+        self.y = np.array(y)
 
         if hasattr(sx, "__iter__"):
-            self.sx = sx
+            self.sx = np.array(sx)
         else:
             self.sx = np.ones(x.shape[0]) * sx
 
         if hasattr(sy, "__iter__"):
-            self.sy = sy
+            self.sy = np.array(sy)
         else:
             self.sy = np.ones(y.shape[0]) * sy
 
