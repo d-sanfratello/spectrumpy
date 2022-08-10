@@ -2,23 +2,30 @@ import corner
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.ndimage
+import warnings
 
 from cpnest import CPNest
 
 from .core_abc_classes import SpectrumImageABC
-from .spectrum_rotated_image import SpectrumRotatedImage
 
 from spectrumpy.bayes_inference import RotationPosterior
 
 
 class SpectrumImage(SpectrumImageABC):
-    def __init__(self, image):
+    def __init__(self, image, is_lamp, calibration):
         self.image = image
-        self.__info = {'original': np.copy(image)}
+        self._info = {'original': np.copy(image),
+                      'lamp': is_lamp,
+                      'calibration': calibration}
 
     def show(self, log=True, *args, **kwargs):
         if not isinstance(log, bool):
             raise TypeError("`log` must be a bool.")
+
+        if not np.all(self.image):
+            warnings.warn("Image contains zeros, using log my create "
+                          "artifacts in the representation. This should not "
+                          "affect data.")
 
         fig = plt.figure(*args, **kwargs)
         ax = fig.gca()
@@ -67,8 +74,13 @@ class SpectrumImage(SpectrumImageABC):
         return job, self.__angle_from_m(
             job, show=show, save=save, name=name)
 
-    def rotate_image(self, angle, info):
+    def rotate_image(self, angle, info=None):
+        from .spectrum_rotated_image import SpectrumRotatedImage
+
         rotated = scipy.ndimage.rotate(self.image, angle, reshape=True)
+
+        if info is None:
+            info = self.info
 
         return SpectrumRotatedImage(rotated, angle, info)
 
@@ -101,4 +113,4 @@ class SpectrumImage(SpectrumImageABC):
 
     @property
     def info(self):
-        return self.__info
+        return self._info
