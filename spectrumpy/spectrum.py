@@ -52,6 +52,9 @@ class Spectrum:
             ax.imshow(np.log10(self.image), origin='lower')
         else:
             ax.imshow(self.image, origin='lower')
+
+        ax.set_xlabel('[px]')
+        ax.set_ylabel('[px]')
         plt.show()
 
     def find_rotation_angle(self,
