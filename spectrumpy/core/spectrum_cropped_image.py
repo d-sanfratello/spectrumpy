@@ -1,34 +1,26 @@
 import numpy as np
 
-from astropy.io import fits
-
 from .core_abc_classes import SpectrumCroppedImageABC
 
-from spectrum_rotated_image import SpectrumRotatedImage
-from spectrum_image import SpectrumImage
-from spectrum import Spectrum
+from .spectrum_rotated_image import SpectrumRotatedImage
+from .spectrum import Spectrum
 
 
 class SpectrumCroppedImage(SpectrumCroppedImageABC, SpectrumRotatedImage):
-    def __init__(self, image, lr_idx, ab_idx, info):
+    def __init__(self, image, crop_x, crop_y, info):
         SpectrumRotatedImage.__init__(self, image, info['angle'], info)
-        self.__info['lr_idx'] = lr_idx
-        self.__info['ab_idx'] = ab_idx
+        self._info['crop_x'] = crop_x
+        self._info['crop_y'] = crop_y
 
-    def run_integration(self):
+    def run_integration(self, info=None):
         integrated = np.sum(self.image, axis=0)
 
-        return Spectrum(integrated, self.info)
+        if info is None:
+            info = self.info
 
+        return Spectrum(integrated, info)
 
-class SpectrumFile:
-    def __init__(self, spectrum_path):
-        with fits.open(spectrum_path) as s_file:
-            self.hdu_list = [hdu for hdu in s_file]
-            self.headers = [hdu.header for hdu in self.hdu_list]
-            self.data = [hdu.data for hdu in self.hdu_list]
+    @property
+    def info(self):
+        return self._info
 
-        self.images = {
-            f'{i}': SpectrumImage(data) for i, data in enumerate(self.data)
-            if self.headers[i]['NAXIS'] == 2
-        }
