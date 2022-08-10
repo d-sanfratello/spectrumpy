@@ -58,7 +58,9 @@ class Spectrum:
                             x, y,
                             error_y, error_x=None,
                             bounds=[[-np.inf, np.inf],
-                                    [-np.inf, np.inf]]):
+                                    [-np.inf, np.inf]],
+                            verbose=1, nlive=1000, maxmcmc=1500, nnest=4,
+                            nensemble=4, seed=1234):
 
         if error_x is None:
             error_x = np.zeros_like(x)
@@ -73,19 +75,17 @@ class Spectrum:
 
         job = CPNest(
             rot_angle,
-            verbose=1,
-            nlive=1000,
-            maxmcmc=1500,
-            nnest=4,
-            nensemble=4,
-            seed=1234
+            verbose=verbose,
+            nlive=nlive,
+            maxmcmc=maxmcmc,
+            nnest=nnest,
+            nensemble=nensemble,
+            seed=seed
         )
 
         job.run()
 
-        post = job.posterior_samples.ravel()
-
-        return post
+        return job
 
     def run_integration(self):
         self.int = np.sum(self.image, axis=0)
