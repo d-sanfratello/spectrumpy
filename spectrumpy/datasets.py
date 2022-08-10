@@ -26,7 +26,7 @@ class DataSets:
             for i, l in enumerate(lines):
                 self.names[l] = names[i]
 
-        self.__sortdataset__()
+        self.__sortdataset()
 
     def add_points(self, lines, px, errpx, names):
         try:
@@ -47,7 +47,7 @@ class DataSets:
         for i, l in enumerate(lines):
             self.names[l] = names[i]
 
-        self.__sortdataset__()
+        self.__sortdataset()
 
     def find_line(self, line_min, line_max):
         sup = self.lines[self.lines >= line_min]
@@ -104,7 +104,7 @@ class DataSets:
             aux_dict.pop(line)
             return np.delete(self.lines, idx), np.delete(self.px, idx), np.delete(self.errpx, idx),
 
-    def __sortdataset__(self):
+    def __sortdataset(self):
         idx = np.argsort(self.lines)
         self.lines = np.take(self.lines, idx)
         self.px = np.take(self.px, idx)
