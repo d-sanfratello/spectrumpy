@@ -6,6 +6,7 @@ from .core_abc_classes import SpectrumCroppedImageABC
 
 from spectrum_rotated_image import SpectrumRotatedImage
 from spectrum_image import SpectrumImage
+from spectrum import Spectrum
 
 
 class SpectrumCroppedImage(SpectrumCroppedImageABC, SpectrumRotatedImage):
