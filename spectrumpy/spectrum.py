@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import warnings
 
+import scipy.ndimage
 from astropy.io import fits
 from cpnest import CPNest
 from numbers import Number
 from pathlib import Path
 
-from scipy.ndimage import rotate
 from scipy.ndimage import median_filter
 from scipy.optimize import curve_fit
 from scipy.optimize import minimize
@@ -32,6 +32,9 @@ class Spectrum:
             self.fits_hdu = s_file
 
         self.is_lamp = is_lamp
+
+        self.rotated = None
+        self.cropped = None
 
         self.smoothed = None
         self.weighted_lamp = None
@@ -93,6 +96,9 @@ class Spectrum:
 
         return job, self.__angle_from_m(
             job, show=show, save=save, name=name)
+
+    def rotate_image(self, angle):
+        self.rotated = scipy.ndimage.rotate(self.image, angle, reshape=True)
 
     def run_integration(self):
         self.int = np.sum(self.image, axis=0)
