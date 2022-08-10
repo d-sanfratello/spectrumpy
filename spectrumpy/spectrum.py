@@ -66,6 +66,7 @@ class Spectrum:
                             verbose=1, nlive=1000, maxmcmc=1500, nnest=4,
                             nensemble=4, seed=1234,
                             show=True, save=True, name='./joint_rotation.pdf'):
+        # FIXME: strong coupling
 
         if error_x is None:
             error_x = np.zeros_like(x)
@@ -120,6 +121,7 @@ class Spectrum:
 
     def run_calibration(self, order, method='ls', bounds_pars=None,
                         verbose=False, n=1000, delta=0.1):
+        # FIXME: very low cohesion
         if order not in [1, 2, 3, 4]:
             raise ValueError("Unknown order.")
         if method not in ['ls', 'bayes']:
@@ -202,7 +204,7 @@ class Spectrum:
                          lamp,
                          exclude=None,
                          **kwargs):
-        # FIXME: need to delete all lamp references
+        # FIXME: low cohesion (maybe)?
         if not isinstance(lamp, Spectrum):
             raise TypeError("`lamp` must be a `Spectrum` instance.")
         if self.model is None:
@@ -279,6 +281,7 @@ class Spectrum:
         plt.show()
 
     def compare(self, spectrum):
+        # FIXME: low cohesion
         eq_spectrum = spectrum.int / spectrum.int.max() * self.int.max()
 
         x = np.linspace(0, len(self.int) - 1, len(self.int))
