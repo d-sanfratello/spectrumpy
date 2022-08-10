@@ -20,12 +20,17 @@ from spectrumpy.bayes_inference import RotationPosterior
 
 
 class Spectrum:
-    def __init__(self, spectrum_path, data_ext=0, calibration=None):
+    def __init__(self,
+                 spectrum_path, data_ext=0,
+                 calibration=None,
+                 is_lamp=False):
         with fits.open(spectrum_path) as s_file:
             self.header = s_file[data_ext].header
             self.image = s_file[data_ext].data
 
-            self.s_fits_hdu = s_file
+            self.fits_hdu = s_file
+
+        self.is_lamp = is_lamp
 
         self.smoothed = None
         self.weighted_lamp = None
@@ -95,13 +100,14 @@ class Spectrum:
 
         plt.show()
 
-    def smooth(self, size):
-        # FIXME: Worth keeping? Anyway should be rethought
+    def smooth(self, size, lamp):
+        if not isinstance(lamp, Spectrum):
+            raise TypeError("`lamp` must be a `Spectrum` instance.")
         if self.int is None:
             raise AttributeError("Integration has not been performed, yet.")
 
         self.smoothed = median_filter(self.int, size=size)
-        self.weighted_lamp = self.l_int / self.smoothed
+        self.weighted_lamp = lamp.int / self.smoothed
 
     def assign_dataset(self, lines, px, errpx, names):
         self.dataset = DataSets(lines, px, errpx, names)
@@ -186,8 +192,13 @@ class Spectrum:
 
             return samples, x_hat_s, s_orig, x_orig, acc, rej
 
-    def show_calibration(self, exclude=None, **kwargs):
+    def show_calibration(self,
+                         lamp,
+                         exclude=None,
+                         **kwargs):
         # FIXME: need to delete all lamp references
+        if not isinstance(lamp, Spectrum):
+            raise TypeError("`lamp` must be a `Spectrum` instance.")
         if self.model is None:
             raise AttributeError("Calibration has not been run, yet.")
 
@@ -198,7 +209,7 @@ class Spectrum:
                     xerr=self.dataset.errpx,
                     linestyle='', capsize=2, marker=',')
 
-        x = np.linspace(0, len(self.l_int) - 1, len(self.l_int))
+        x = np.linspace(0, len(lamp.int) - 1, len(lamp.int))
         ax.plot(x, self.calibration(x),
                 linestyle='solid', color='black', linewidth=0.5)
         ax.set_xlim(0, x[-1])
@@ -220,7 +231,7 @@ class Spectrum:
         ax = fig_l.gca()
         ax.grid()
         line = self.calibration(x)
-        ax.plot(line, self.l_int, linestyle='solid', color='black',
+        ax.plot(line, lamp.int, linestyle='solid', color='black',
                 linewidth=0.5)
         for lam in self.dataset.lines:
             if lam == self.dataset.lines.min() or lam == self.dataset.lines.max():
@@ -229,7 +240,7 @@ class Spectrum:
             else:
                 ax.axvline(lam, ymin=0, ymax=1, linewidth=0.5, color='navy',
                            linestyle='dashed')
-                ax.text(lam, self.l_int.max() / 2,
+                ax.text(lam, lamp.int.max() / 2,
                         '{:s}'.format(self.dataset.names[lam]),
                         rotation=90, verticalalignment='center',
                         horizontalalignment='left',
