@@ -25,7 +25,11 @@ class SpectrumImageABC(ABC):
 
 class SpectrumRotatedImageABC(ABC):
     @abstractmethod
-    def crop(self, info):
+    def crop_image(self, info):
+        pass
+
+    @abstractmethod
+    def info(self):
         pass
 
 
@@ -33,3 +37,44 @@ class SpectrumCroppedImageABC(ABC):
     @abstractmethod
     def run_integration(self, info):
         pass
+
+    @abstractmethod
+    def info(self):
+        pass
+
+
+class SpectrumABC(ABC):
+    @abstractmethod
+    def show_integration(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def smooth(self, size, lamp):
+        pass
+
+    @abstractmethod
+    def weight(self, smoothed, lamp):
+        pass
+
+    @abstractmethod
+    def assign_dataset(self, lines, px, errpx, names):
+        pass
+
+    @abstractmethod
+    def calibrate(self, order, method, bounds_pars, verbose, n, delta):
+        pass
+
+    @abstractmethod
+    def compare(self, spectrum):
+        pass
+
+    @abstractmethod
+    def info(self):
+        pass
+
+
+class Calibration(ABC):
+    @abstractmethod
+    def show_calibration(self, lamp, exclude, **kwargs):
+        pass
+
