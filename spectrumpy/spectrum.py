@@ -1,3 +1,4 @@
+import corner
 import matplotlib.pyplot as plt
 import numpy as np
 import warnings
@@ -63,7 +64,8 @@ class Spectrum:
                             bounds=[[-np.inf, np.inf],
                                     [-np.inf, np.inf]],
                             verbose=1, nlive=1000, maxmcmc=1500, nnest=4,
-                            nensemble=4, seed=1234):
+                            nensemble=4, seed=1234,
+                            show=True, save=True, name='./joint_rotation.pdf'):
 
         if error_x is None:
             error_x = np.zeros_like(x)
@@ -88,7 +90,8 @@ class Spectrum:
 
         job.run()
 
-        return job
+        return job, self.__angle_from_m(
+            job, show=show, save=save, name=name)
 
     def run_integration(self):
         self.int = np.sum(self.image, axis=0)
@@ -319,3 +322,30 @@ class Spectrum:
             spectra_ratio[_] = self.int[_] / l_approx(pt)
 
         return spectra_ratio
+
+    @staticmethod
+    def __angle_from_m(job,
+                       show=True,
+                       save=True, name='./joint_rotation.pdf'):
+        post = job.posterior_samples.ravel()
+        samples = np.column_stack([np.rad2deg(np.arctan(post['m'])),
+                                   post['q']])
+        fig = corner.corner(samples, labels=[r'$\alpha$', 'q'],
+                            quantiles=[.05, .95],
+                            filename=name, show_titles=True,
+                            title_fmt='.3e',
+                            title_kwargs={'fontsize': 8},
+                            label_kwargs={'fontsize': 8},
+                            use_math_text=True)
+
+        if save:
+            fig.savefig(name)
+        if show:
+            plt.show()
+
+        # as in corner.core.corner_impl function.
+        q_16, q_50, q_84 = corner.quantile(
+            samples.T[0], [0.16, 0.5, 0.84])
+        q_m, q_p = q_50 - q_16, q_84 - q_50
+
+        return q_50, q_m, q_p
