@@ -38,7 +38,10 @@ class DataSets:
             raise TypeError("New points must be iterables.")
 
         if len(lines) != len(px) != len(errpx) != len(names):
-            raise ValueError("Must insert the same amount of information for each datapoint.")
+            raise ValueError(
+                "Must insert the same amount of information for each "
+                "datapoint."
+            )
 
         self.px = np.concatenate((self.px, px))
         self.errpx = np.concatenate((self.errpx, errpx))
@@ -54,7 +57,10 @@ class DataSets:
         intr = sup[sup <= line_max]
 
         if len(intr) > 1:
-            warnings.warn("More than one wavelength found. Try reducing the interval if you need only one.")
+            warnings.warn(
+                "More than one wavelength found. Try reducing the interval "
+                "if you need only one."
+            )
 
             return intr
         elif len(intr) <= 0:
@@ -64,7 +70,9 @@ class DataSets:
 
     def find_line_idx(self, line=None, line_min=None, line_max=None):
         if line is None and (line_min is None and line_max is None):
-            raise ValueError("Either `line` or bounds must be a wavelength.")
+            raise ValueError(
+                "Either `line` or bounds must be a wavelength."
+            )
 
         if line is not None:
             idx = np.where(self.lines == line)
@@ -102,7 +110,9 @@ class DataSets:
         else:
             aux_dict = self.names.copy()
             aux_dict.pop(line)
-            return np.delete(self.lines, idx), np.delete(self.px, idx), np.delete(self.errpx, idx),
+            return np.delete(self.lines, idx),\
+                np.delete(self.px, idx),\
+                np.delete(self.errpx, idx),
 
     def __sortdataset(self):
         idx = np.argsort(self.lines)
@@ -114,7 +124,9 @@ class DataSets:
         string = 'Lines [approx]\tpx\terr\tname\n'
         string += '--------------------------------------\n'
         for i, l in enumerate(self.lines):
-            string += "{:.2f}\t\t{:d}\t{:d}\t{:s}\n".format(l, self.px[i], self.errpx[i], self.names[l])
+            string += "{:.2f}\t\t{:d}\t{:d}\t{:s}\n".format(
+                l, self.px[i], self.errpx[i], self.names[l]
+            )
         return string
 
     def __str__(self):
