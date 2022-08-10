@@ -37,7 +37,6 @@ class RotationPosterior(model.Model):
         logP = super(RotationPosterior, self).log_prior(param)
         if np.isfinite(logP):
             logP = 0
-            # logP -= np.log(param['E(B-V)'])
 
         return logP
 
