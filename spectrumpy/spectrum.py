@@ -20,38 +20,21 @@ from spectrumpy.bayes_inference import RotationPosterior
 
 
 class Spectrum:
-    def __init__(self, spectrum_path, lamp_path, data_ext=0):
-        if not isinstance(spectrum_path, (Path, str)):
-            raise TypeError("`{}` is not a valid path.".format(spectrum_path))
-        if not isinstance(lamp_path, (Path, str)):
-            raise TypeError("`{}` is not a valid path.".format(lamp_path))
-
-        if not isinstance(data_ext, int):
-            raise TypeError("`data_ext` must be an integer.")
-        elif data_ext < 0:
-            raise ValueError("`data_ext` must be positive.")
-
+    def __init__(self, spectrum_path, data_ext=0, calibration=None):
         with fits.open(spectrum_path) as s_file:
-            self.s_header = s_file[data_ext].header
-            self.s_image = s_file[data_ext].data
+            self.header = s_file[data_ext].header
+            self.image = s_file[data_ext].data
 
             self.s_fits_hdu = s_file
-
-        with fits.open(lamp_path) as l_file:
-            self.l_header = l_file[data_ext].header
-            self.l_image = l_file[data_ext].data
-
-            self.l_fits_hdu = l_file
 
         self.smoothed = None
         self.weighted_lamp = None
 
-        self.l_int = None
-        self.s_int = None
+        self.int = None
 
         self.dataset = None
         self.model = None
-        self.calibration = None
+        self.calibration = calibration
         self.sampler = None
 
     def show_base_image(self, log=True, *args, **kwargs):
@@ -59,18 +42,11 @@ class Spectrum:
             raise TypeError("`log` must be a bool.")
 
         fig = plt.figure(*args, **kwargs)
-        ax1 = fig.add_subplot(121)
+        ax = fig.gca()
         if log:
-            ax1.imshow(np.log10(self.s_image), origin='lower')
+            ax.imshow(np.log10(self.image), origin='lower')
         else:
-            ax1.imshow(self.s_image, origin='lower')
-
-        ax2 = fig.add_subplot(122)
-        if log:
-            ax2.imshow(np.log10(self.l_image), origin='lower')
-        else:
-            ax2.imshow(self.l_image, origin='lower')
-
+            ax.imshow(self.image, origin='lower')
         plt.show()
 
     def find_rotation_angle(self,
@@ -107,31 +83,24 @@ class Spectrum:
         return post
 
     def run_integration(self):
-        self.s_int = np.sum(self.s_image, axis=0)
-        self.l_int = np.sum(self.l_image, axis=0)
+        self.int = np.sum(self.image, axis=0)
 
     def show_integration(self, **kwargs):
-        fig_l = plt.figure(**kwargs)
-        ax = fig_l.gca()
+        fig = plt.figure(**kwargs)
+        ax = fig.gca()
         ax.grid()
-        ax.plot(self.l_int, linestyle='solid', color='black', linewidth=0.5)
-        ax.set_xlim(0, len(self.l_int) - 1)
-        ax.set_xlabel(r'[px]')
-
-        fig_s = plt.figure(**kwargs)
-        ax = fig_s.gca()
-        ax.grid()
-        ax.plot(self.s_int, linestyle='solid', color='black', linewidth=0.5)
-        ax.set_xlim(0, len(self.s_int) - 1)
+        ax.plot(self.int, linestyle='solid', color='black', linewidth=0.5)
+        ax.set_xlim(0, len(self.int) - 1)
         ax.set_xlabel(r'[px]')
 
         plt.show()
 
     def smooth(self, size):
-        if self.s_int is None:
+        # FIXME: Worth keeping? Anyway should be rethought
+        if self.int is None:
             raise AttributeError("Integration has not been performed, yet.")
 
-        self.smoothed = median_filter(self.s_int, size=size)
+        self.smoothed = median_filter(self.int, size=size)
         self.weighted_lamp = self.l_int / self.smoothed
 
     def assign_dataset(self, lines, px, errpx, names):
@@ -186,7 +155,7 @@ class Spectrum:
             self.sampler = MHsampler(self.dataset.px, self.dataset.lines,
                                      self.dataset.errpx,
                                      bounds_pars=bounds_pars,
-                                     bounds_x=[0, len(self.s_int) - 1],
+                                     bounds_x=[0, len(self.int) - 1],
                                      n=n, delta=delta)
 
             def log_likelihood(x, y, errx, x_hat, theta):
@@ -218,6 +187,7 @@ class Spectrum:
             return samples, x_hat_s, s_orig, x_orig, acc, rej
 
     def show_calibration(self, exclude=None, **kwargs):
+        # FIXME: need to delete all lamp references
         if self.model is None:
             raise AttributeError("Calibration has not been run, yet.")
 
@@ -271,7 +241,7 @@ class Spectrum:
         ax = fig_s.gca()
         ax.grid()
         line = self.calibration(x)
-        ax.plot(line, self.s_int, linestyle='solid', color='black',
+        ax.plot(line, self.int, linestyle='solid', color='black',
                 linewidth=0.5)
         for lam in self.dataset.lines:
             if lam == self.dataset.lines.min() or lam == self.dataset.lines.max():
@@ -281,7 +251,7 @@ class Spectrum:
                 lam] not in exclude:
                 ax.axvline(lam, ymin=0, ymax=1, linewidth=0.5, color='navy',
                            linestyle='dashed')
-                ax.text(lam, (self.s_int.max() + self.s_int.min()) / 2,
+                ax.text(lam, (self.int.max() + self.int.min()) / 2,
                         '{:s}'.format(self.dataset.names[lam]),
                         rotation=90, verticalalignment='center',
                         horizontalalignment='left',
@@ -292,17 +262,17 @@ class Spectrum:
         plt.show()
 
     def compare(self, spectrum):
-        eq_spectrum = spectrum.s_int / spectrum.s_int.max() * self.s_int.max()
+        eq_spectrum = spectrum.int / spectrum.int.max() * self.int.max()
 
-        x = np.linspace(0, len(self.s_int) - 1, len(self.s_int))
+        x = np.linspace(0, len(self.int) - 1, len(self.int))
         ref_calibration = self.calibration(x)
 
-        x_cmp = np.linspace(0, len(spectrum.s_int) - 1, len(spectrum.s_int))
+        x_cmp = np.linspace(0, len(spectrum.int) - 1, len(spectrum.int))
         cmp_calibration = spectrum.calibration(x_cmp)
 
         if len(ref_calibration) == len(cmp_calibration) and np.all(
                 self.calibration == eq_spectrum):
-            return self.s_int / eq_spectrum
+            return self.int / eq_spectrum
 
         spectra_ratio = np.zeros(len(ref_calibration), dtype=np.float64)
 
@@ -332,6 +302,6 @@ class Spectrum:
                                  low_y - (upp_y - low_y) / (
                                              upp_x - low_x) * low_x)
 
-            spectra_ratio[_] = self.s_int[_] / l_approx(pt)
+            spectra_ratio[_] = self.int[_] / l_approx(pt)
 
         return spectra_ratio
