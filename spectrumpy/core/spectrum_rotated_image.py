@@ -1,3 +1,5 @@
+import numpy as np
+
 from core_abc_classes import SpectrumRotatedImageABC
 
 from spectrum_image import SpectrumImage
