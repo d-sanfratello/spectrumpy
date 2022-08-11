@@ -20,7 +20,9 @@ class Spectrum(SpectrumABC):
 
         self.dataset = None
 
-    def show_integration(self, **kwargs):
+    def show(self,
+             show=False, save=True, name='./spectrum_show.pdf',
+             **kwargs):
         fig = plt.figure(**kwargs)
         ax = fig.gca()
         ax.grid()
@@ -28,7 +30,10 @@ class Spectrum(SpectrumABC):
         ax.set_xlim(0, len(self.spectrum) - 1)
         ax.set_xlabel(r'[px]')
 
-        plt.show()
+        if save:
+            fig.savefig(name)
+        if show:
+            plt.show()
 
     def smooth(self, size, lamp):
         if self.info['lamp']:
