@@ -94,7 +94,7 @@ class Linear(FunctionABC):
         return tuple(self.__pars)
 
     def __call__(self, x):
-        a, b = self.pars()
+        a, b = self.pars
         return a*x + b
 
     def func(self, x, *args):
@@ -123,7 +123,7 @@ class Quadratic(FunctionABC):
         if delta < 0:
             return None
         elif delta == 0:
-            return - 0.5 * b / a
+            return - 0.5 * b/a
         else:
             return 0.5 * (-b/a + np.sqrt(delta)), 0.5 * (-b/a - np.sqrt(delta))
 
@@ -214,8 +214,9 @@ class Quartic(FunctionABC):
 
     def zeros(self):
         a, b, c, d, e = self.pars
-        p = (8 * c / a - 3 * (b / a) ** 2) / 8
-        S = (8 * d / a - 4 * b * c / a ** 2 + (b / a) ** 3) / 8
+
+        p = (8 * c/a - 3 * (b/a) ** 2) / 8
+        S = (8 * d/a - 4 * b * c/a ** 2 + (b / a) ** 3) / 8
 
         q = 12 * e / a - 3 * b*d/a**2 + (c/a)**2
         s = 27 * (d/a) ** 2 - 72 * c*e/a ** 2 + 27 * b ** 2 * e/a**3 \
