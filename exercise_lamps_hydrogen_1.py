@@ -70,13 +70,34 @@ if __name__ == "__main__":
 
     hydr_rotated = hydr.rotate_image(alpha)
     hydr_rotated.show(figsize=figsize_sbs,
+                      show=False,
                       save=True, name='./exercise_data/rotated_hydr.pdf')
 
-    crops_y = [1125, 1778]
+    crops_y = [1125, 1758]
     hydr_cropped = hydr_rotated.crop_image(crop_y=crops_y)
     hydr_cropped.show(figsize=figsize_sbs,
+                      show=False,
                       save=True, name='./exercise_data/cropped_hydr.pdf')
+
+    ylims = hydr_cropped.image.shape[0]
+    hydr_cropped_up = hydr_cropped.crop_image(crop_y=[ylims-1, ylims])
+    hydr_cropped_dw = hydr_cropped.crop_image(crop_y=[21, 22])
+
+    sp_ref_up = hydr_cropped_up.run_integration()
+    sp_red_dw = hydr_cropped_dw.run_integration()
+
+    def sp_slice(x):
+        return sp_red_dw.spectrum
+
+    sp_ref_up.show(figsize=figsize_sbs,
+                   model=sp_slice,
+                   x=np.linspace(0,
+                                 len(sp_red_dw.spectrum)-1,
+                                 len(sp_red_dw.spectrum)),
+                   show=True,
+                   save=True, name='./exercise_data/hydr_spectrum_slices.pdf')
 
     sp = hydr_cropped.run_integration()
     sp.show(figsize=figsize_sbs,
+            show=False,
             save=True, name='./exercise_data/int_spectrum_hydr.pdf')
