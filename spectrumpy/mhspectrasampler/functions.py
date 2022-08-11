@@ -58,9 +58,8 @@ class Constant(FunctionABC):
         a = self.pars[0]
         return a * np.ones_like(x)
 
-    def func(self, x, *args):
-        if len(args) != self.order + 1:
-            raise ValueError("Number of parameters is wrong.")
+    @classmethod
+    def func(cls, x, *args):
         a = args[0]
 
         return a * np.ones_like(x)
@@ -97,9 +96,8 @@ class Linear(FunctionABC):
         a, b = self.pars
         return a*x + b
 
-    def func(self, x, *args):
-        if len(args) != self.order + 1:
-            raise ValueError("Number of parameters is wrong.")
+    @classmethod
+    def func(cls, x, *args):
         a, b = args
 
         return a * x + b
@@ -143,9 +141,8 @@ class Quadratic(FunctionABC):
         a, b, c = self.pars
         return a * x**2 + b * x + c
 
-    def func(self, x, *args):
-        if len(args) != self.order + 1:
-            raise ValueError("Number of parameters is wrong.")
+    @classmethod
+    def func(cls, x, *args):
         a, b, c = args
 
         return a * x**2 + b * x + c
@@ -196,7 +193,8 @@ class Cubic(FunctionABC):
         a, b, c, d = self.pars
         return a * x ** 3 + b * x**2 + c * x + d
 
-    def func(self, x, *pars):
+    @classmethod
+    def func(cls, x, *pars):
         a, b, c, d = pars
         return a * x ** 3 + b * x**2 + c * x + d
 
