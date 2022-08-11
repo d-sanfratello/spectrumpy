@@ -1,74 +1,108 @@
 import numpy as np
 
+from abc import ABC, abstractmethod
 
-class Function(object):
-    def __init__(self, order):
-        self.order = order
 
+class FunctionABC(ABC):
+    @abstractmethod
+    def derivative(self):
+        pass
+
+    @abstractmethod
+    def func(self, x, *args):
+        pass
+
+    @abstractmethod
+    def order(self):
+        pass
+
+    @abstractmethod
+    def pars(self):
+        pass
+
+    @abstractmethod
     def zeros(self):
         pass
 
-    def derivative(self, x):
-        pass
-
+    @abstractmethod
     def __call__(self, x):
         pass
 
 
-class Constant(Function):
-    def __init__(self, a):
-        super(Constant, self).__init__(0)
-        self.a = a
+class Constant(FunctionABC):
+    def __init__(self, *args):
+        if len(args) > 1:
+            raise ValueError("Constant can only have a single value.")
+
+        missing = self.order + 1 - len(args)
+        self.__pars = [*args]
+
+        if missing > 0:
+            self.__pars.append([0 for _ in range(missing)])
 
     def zeros(self):
         return None
 
-    def derivative(self, x):
-        try:
-            l = len(x)
-        except TypeError:
-            return self.a
-        else:
-            return np.zeros(l)
+    def derivative(self):
+        return Constant(0)
+
+    @property
+    def order(self):
+        return 0
+
+    @property
+    def pars(self):
+        return tuple(self.__pars)
 
     def __call__(self, x):
-        try:
-            l = len(x)
-        except TypeError:
-            return self.a
-        else:
-            return self.a * np.ones(l)
+        a = self.pars[0]
+        return a * np.ones_like(x)
 
-    @classmethod
-    def func(cls, x, a):
-        if not isinstance(x, np.ndarray):
-            x = np.array(x)
+    def func(self, x, *args):
+        if len(args) != self.order + 1:
+            raise ValueError("Number of parameters is wrong.")
+        a = args[0]
 
-        return a * np.ones(len(x))
+        return a * np.ones_like(x)
 
 
-class Linear(Function):
-    def __init__(self, a, b):
-        super(Linear, self).__init__(1)
-        self.a = a
-        self.b = b
+class Linear(FunctionABC):
+    def __init__(self, *args):
+        if len(args) > 2:
+            raise ValueError("Linear can only have a two parameters.")
+
+        missing = self.order + 1 - len(args)
+        self.__pars = [*args]
+
+        if missing > 0:
+            self.__pars.append([0 for _ in range(missing)])
 
     def zeros(self):
-        return - self.b / self.a,
+        a, b = self.pars
+        return -b/a,
 
-    def derivative(self, x):
-        df_dx = Constant(self.a)
-        return df_dx(x)
+    def derivative(self):
+        a, b = self.pars
+        return Constant(a)
+
+    @property
+    def order(self):
+        return 1
 
     def __call__(self, x):
-        return self.a * x + self.b
+        a, b = self.pars()
+        return a*x + b
 
-    @classmethod
-    def func(cls, x, a, b):
+    def func(self, x, *args):
+        if len(args) != self.order + 1:
+            raise ValueError("Number of parameters is wrong.")
+        a, b = args
+
         return a * x + b
 
 
-class Quadratic(Function):
+class Quadratic(FunctionABC):
+    # FIXME: complete update
     def __init__(self, a, b, c):
         super(Quadratic, self).__init__(2)
         self.a = a
@@ -98,7 +132,7 @@ class Quadratic(Function):
         return a * x**2 + b * x + c
 
 
-class Cubic(Function):
+class Cubic(FunctionABC):
     def __init__(self, a, b, c, d):
         super(Cubic, self).__init__(3)
         self.a = a
@@ -134,7 +168,7 @@ class Cubic(Function):
         return a * x ** 3 + b * x**2 + c * x + d
 
 
-class Quartic(Function):
+class Quartic(FunctionABC):
     def __init__(self, a, b, c, d, e):
         super(Quartic, self).__init__(4)
         self.a = a
