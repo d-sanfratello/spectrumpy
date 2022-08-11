@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 class SpectrumImageABC(ABC):
     @abstractmethod
-    def show(self, log, *args, **kwargs):
+    def show(self, log, show, save, name, *args, **kwargs):
         pass
 
     @abstractmethod
@@ -45,7 +45,7 @@ class SpectrumCroppedImageABC(ABC):
 
 class SpectrumABC(ABC):
     @abstractmethod
-    def show_integration(self, **kwargs):
+    def show(self, show, save, name, **kwargs):
         pass
 
     @abstractmethod
