@@ -18,9 +18,15 @@ class SpectrumImage(SpectrumImageABC):
                       'lamp': is_lamp,
                       'calibration': calibration}
 
-    def show(self, log=True, *args, **kwargs):
+    def show(self,
+             log=True, model=None, x=None,
+             show=False, save=True, name='./image_show.pdf',
+             *args, **kwargs):
         if not isinstance(log, bool):
             raise TypeError("`log` must be a bool.")
+
+        if model is not None and x is None:
+            raise ValueError("Must pass `x` array-like together with a model.")
 
         if not np.all(self.image):
             warnings.warn("Image contains zeros, using log my create "
@@ -34,9 +40,21 @@ class SpectrumImage(SpectrumImageABC):
         else:
             ax.imshow(self.image, origin='lower')
 
+        if model is not None:
+            if hasattr(model, '__iter__'):
+                model = np.asarray(model)
+                l, m, h = np.percentile(model, [5, 50, 95], axis=0)
+
+                ax.plot(x, m, lw=0.5, color='r')
+                ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
+
         ax.set_xlabel('[px]')
         ax.set_ylabel('[px]')
-        plt.show()
+
+        if save:
+            fig.savefig(name)
+        if show:
+            plt.show()
 
     def find_rotation_angle(self,
                             x, y,
