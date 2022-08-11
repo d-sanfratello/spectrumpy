@@ -69,7 +69,7 @@ class Constant(FunctionABC):
 class Linear(FunctionABC):
     def __init__(self, *args):
         if len(args) > 2:
-            raise ValueError("Linear can only have a two parameters.")
+            raise ValueError("Linear can only have two parameters.")
 
         missing = self.order + 1 - len(args)
         self.__pars = [*args]
@@ -89,6 +89,10 @@ class Linear(FunctionABC):
     def order(self):
         return 1
 
+    @property
+    def pars(self):
+        return tuple(self.__pars)
+
     def __call__(self, x):
         a, b = self.pars()
         return a*x + b
@@ -102,96 +106,128 @@ class Linear(FunctionABC):
 
 
 class Quadratic(FunctionABC):
-    # FIXME: complete update
-    def __init__(self, a, b, c):
-        super(Quadratic, self).__init__(2)
-        self.a = a
-        self.b = b
-        self.c = c
+    def __init__(self, *args):
+        if len(args) > 3:
+            raise ValueError("Quadratic can only have three parameters.")
+
+        missing = self.order + 1 - len(args)
+        self.__pars = [*args]
+
+        if missing > 0:
+            self.__pars.append([0 for _ in range(missing)])
 
     def zeros(self):
-        delta = (self.b/self.a)**2 - 4 * self.c/self.a
+        a, b, c = self.pars
+        delta = (b/a)**2 - 4 * c/a
 
         if delta < 0:
             return None
         elif delta == 0:
-            return - 0.5 * self.b / self. a
+            return - 0.5 * b / a
         else:
-            return 0.5 * (-self.b/self.a + np.sqrt(delta)), 0.5 * (-self.b/self.a - np.sqrt(delta))
+            return 0.5 * (-b/a + np.sqrt(delta)), 0.5 * (-b/a - np.sqrt(delta))
 
-    def derivative(self, x):
-        x = np.squeeze(np.array(x))
-        df_dx = Linear(2 * self.a, self.b)
-        return df_dx(x)
+    def derivative(self):
+        a, b, c = self.pars
+        return Linear(2 * a, b)
+
+    @property
+    def order(self):
+        return 2
+
+    @property
+    def pars(self):
+        return tuple(self.__pars)
 
     def __call__(self, x):
-        return self.a * x**2 + self.b * x + self.c
+        a, b, c = self.pars
+        return a * x**2 + b * x + c
 
-    @classmethod
-    def func(cls, x, a, b, c):
+    def func(self, x, *args):
+        if len(args) != self.order + 1:
+            raise ValueError("Number of parameters is wrong.")
+        a, b, c = args
+
         return a * x**2 + b * x + c
 
 
 class Cubic(FunctionABC):
-    def __init__(self, a, b, c, d):
-        super(Cubic, self).__init__(3)
-        self.a = a
-        self.b = b
-        self.c = c
-        self.d = d
+    def __init__(self, *args):
+        if len(args) > 4:
+            raise ValueError("Cubic can only have four parameters.")
+
+        missing = self.order + 1 - len(args)
+        self.__pars = [*args]
+
+        if missing > 0:
+            self.__pars.append([0 for _ in range(missing)])
 
     def zeros(self):
-        q = (3 * self.c/self.a - (self.b/self.a)**2) / 9
-        r = (9 * self.b*self.c/self.a**2 - 27 * self.d/self.a - 2 * (self.b/self.a)**3) / 54
+        a, b, c, d = self.pars
+        q = (3 * c/a - (b/a)**2) / 9
+        r = (9 * b*c/a**2 - 27 * d/a - 2 * (b/a)**3) / 54
 
         s = (r/2 + np.sqrt(q**3 / 27 + r**2 / 4))**(1/3)
         t = (r/2 - np.sqrt(q**3 / 27 + r**2 / 4))**(1/3)
 
-        z1 = s + t - self.b * self.a / 3
-        z2 = -0.5 * (s + t) - self.b / (3 * self.a) + np.sqrt(3) / 2 * (s - t) * 1j
-        z3 = -0.5 * (s + t) - self.b / (3 * self.a) - np.sqrt(3) / 2 * (s - t) * 1j
+        z1 = s + t - b * a / 3
+        z2 = -0.5 * (s + t) - b / (3 * a) + np.sqrt(3) / 2 * (s - t) * 1j
+        z3 = -0.5 * (s + t) - b / (3 * a) - np.sqrt(3) / 2 * (s - t) * 1j
 
-        if abs(z2.imag) < np.finfo(np.float64).eps and abs(z3.imag) < np.finfo(np.float64).eps:
+        if abs(z2.imag) < np.finfo(np.float64).eps \
+                and abs(z3.imag) < np.finfo(np.float64).eps:
             return z1, z2, z3
         else:
             return z1
 
-    def derivative(self, x):
-        df_dx = Quadratic(3 * self.a, 2 * self.b, self.c)
-        return df_dx(x)
+    def derivative(self):
+        a, b, c, d = self.pars
+        return Quadratic(3 * a, 2 * b, c)
+
+    @property
+    def order(self):
+        return 3
+
+    @property
+    def pars(self):
+        return tuple(self.__pars)
 
     def __call__(self, x):
-        return self.a * x ** 3 + self.b * x**2 + self.c * x + self.d
+        a, b, c, d = self.pars
+        return a * x ** 3 + b * x**2 + c * x + d
 
-    @classmethod
-    def func(cls, x, a, b, c, d):
+    def func(self, x, *pars):
+        a, b, c, d = pars
         return a * x ** 3 + b * x**2 + c * x + d
 
 
 class Quartic(FunctionABC):
-    def __init__(self, a, b, c, d, e):
-        super(Quartic, self).__init__(4)
-        self.a = a
-        self.b = b
-        self.c = c
-        self.d = d
-        self.e = e
+    def __init__(self, *args):
+        if len(args) > 5:
+            raise ValueError("Quartic can only have five parameters.")
+
+        missing = self.order + 1 - len(args)
+        self.__pars = [*args]
+
+        if missing > 0:
+            self.__pars.append([0 for _ in range(missing)])
 
     def zeros(self):
-        p = (8 * self.c / self.a - 3 * (self.b / self.a) ** 2) / 8
-        S = (8 * self.d / self.a - 4 * self.b * self.c / self.a ** 2 + (self.b / self.a) ** 3) / 8
+        a, b, c, d, e = self.pars
+        p = (8 * c / a - 3 * (b / a) ** 2) / 8
+        S = (8 * d / a - 4 * b * c / a ** 2 + (b / a) ** 3) / 8
 
-        q = 12 * self.e / self.a - 3 * self.b*self.d/self.a**2 + (self.c/self.a)**2
-        s = 27 * (self.d / self.a) ** 2 - 72 * self.c * self.e / self.a ** 2 + 27 * self.b ** 2 * self.e / self.a ** 3 \
-            - 9 * self.b * self.c * self.d / self.a ** 3 + 2 * (self.c / self.a) ** 3
+        q = 12 * e / a - 3 * b*d/a**2 + (c/a)**2
+        s = 27 * (d/a) ** 2 - 72 * c*e/a ** 2 + 27 * b ** 2 * e/a**3 \
+            - 9 * b * c * d / a ** 3 + 2 * (c / a) ** 3
 
         Delta0 = (0.5 * (s + np.sqrt(s ** 2 - 4 * q ** 3))) ** (1 / 3)
-        Q = 0.5 * np.sqrt(-2 * p / 3 + (Delta0 + q / Delta0) / (3 * self.a))
+        Q = 0.5 * np.sqrt(-2 * p / 3 + (Delta0 + q / Delta0) / (3 * a))
 
-        z1 = -.25 * self.b / self.a - Q + 0.5 * np.sqrt(-4 * Q ** 2 - 2 * p + S / Q)
-        z2 = -.25 * self.b / self.a - Q - 0.5 * np.sqrt(-4 * Q ** 2 - 2 * p + S / Q)
-        z3 = -.25 * self.b / self.a + Q + 0.5 * np.sqrt(-4 * Q ** 2 - 2 * p + S / Q)
-        z4 = -.25 * self.b / self.a + Q - 0.5 * np.sqrt(-4 * Q ** 2 - 2 * p + S / Q)
+        z1 = -.25 * b / a - Q + 0.5 * np.sqrt(-4 * Q ** 2 - 2 * p + S / Q)
+        z2 = -.25 * b / a - Q - 0.5 * np.sqrt(-4 * Q ** 2 - 2 * p + S / Q)
+        z3 = -.25 * b / a + Q + 0.5 * np.sqrt(-4 * Q ** 2 - 2 * p + S / Q)
+        z4 = -.25 * b / a + Q - 0.5 * np.sqrt(-4 * Q ** 2 - 2 * p + S / Q)
 
         zeros = []
         if abs(z1.imag) < np.finfo(np.float64).eps:
@@ -210,13 +246,23 @@ class Quartic(FunctionABC):
         else:
             return zeros
 
-    def derivative(self, x):
-        df_dx = Cubic(4 * self.a, 3 * self.b, 2 * self.c, self.d)
-        return df_dx(x)
+    def derivative(self):
+        a, b, c, d, e = self.pars
+        return Cubic(4 * a, 3 * b, 2 * c, d)
+
+    @property
+    def order(self):
+        return 4
+
+    @property
+    def pars(self):
+        return tuple(self.__pars)
 
     def __call__(self, x):
-        return self.a * x ** 4 + self.b * x**3 + self.c * x**2 + self.d * x + self.e
+        a, b, c, d, e = self.pars
+        return a * x**4 + b * x**3 + c * x**2 + d * x + e
 
     @classmethod
-    def func(cls, x, a, b, c, d, e):
-        return a * x ** 4 + b * x ** 3 + c * x**2 + d * x + e
+    def func(cls, x, *args):
+        a, b, c, d, e = args
+        return a * x**4 + b * x**3 + c * x**2 + d * x + e
