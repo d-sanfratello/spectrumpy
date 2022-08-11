@@ -9,7 +9,7 @@ from .core_abc_classes import SpectrumABC
 
 from spectrumpy.dataset import DataSet
 from spectrumpy.fit import FitStatus
-from spectrumpy.mhspectrasampler import functions as fs
+from spectrumpy import function_models as fs
 from spectrumpy.mhspectrasampler import MHsampler
 
 

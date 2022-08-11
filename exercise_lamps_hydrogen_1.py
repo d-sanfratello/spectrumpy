@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 from spectrumpy.io import SpectrumPath
-from spectrumpy.mhspectrasampler.functions import Linear
+from spectrumpy.function_models import Linear
 
 cwd = Path(os.getcwd())
 
