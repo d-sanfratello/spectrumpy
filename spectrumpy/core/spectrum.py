@@ -21,12 +21,26 @@ class Spectrum(SpectrumABC):
         self.dataset = None
 
     def show(self,
+             model=None, x=None,
              show=False, save=True, name='./spectrum_show.pdf',
              **kwargs):
         fig = plt.figure(**kwargs)
         ax = fig.gca()
         ax.grid()
-        ax.plot(self.spectrum, linestyle='solid', color='black', linewidth=0.5)
+        ax.plot(self.spectrum,
+                linestyle='solid', color='black', linewidth=0.5)
+
+        if model is not None:
+            if hasattr(model, '__iter__'):
+                model = np.asarray(model)
+                l, m, h = np.percentile(model, [5, 50, 95], axis=0)
+
+                ax.plot(x, m, lw=0.5, color='r')
+                ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
+            else:
+                ax.plot(x, model(x),
+                        linestyle='solid', color='red', linewidth=0.5)
+
         ax.set_xlim(0, len(self.spectrum) - 1)
         ax.set_xlabel(r'[px]')
 
@@ -34,6 +48,8 @@ class Spectrum(SpectrumABC):
             fig.savefig(name)
         if show:
             plt.show()
+
+        plt.close()
 
     def smooth(self, size, lamp):
         if self.info['lamp']:

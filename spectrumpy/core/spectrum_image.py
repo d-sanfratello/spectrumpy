@@ -47,6 +47,9 @@ class SpectrumImage(SpectrumImageABC):
 
                 ax.plot(x, m, lw=0.5, color='r')
                 ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
+            else:
+                ax.plot(x, model(x),
+                        linestyle='solid', color='red')
 
         ax.set_xlabel('[px]')
         ax.set_ylabel('[px]')
@@ -55,6 +58,8 @@ class SpectrumImage(SpectrumImageABC):
             fig.savefig(name)
         if show:
             plt.show()
+
+        plt.close()
 
     def find_rotation_angle(self,
                             x, y,
