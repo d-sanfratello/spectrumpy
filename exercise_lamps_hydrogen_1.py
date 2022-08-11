@@ -49,7 +49,8 @@ if __name__ == "__main__":
             verbose=1,
             show=True,
             save=True,
-            nlive=1000
+            nlive=1000,
+            name='./exercise_data/joint_rotation.pdf'
             )
 
         post = job.posterior_samples.ravel()
