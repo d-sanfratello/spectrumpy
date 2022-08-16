@@ -40,7 +40,7 @@ class SpectrumRotatedImage(SpectrumRotatedImageABC, SpectrumImage):
             info = self.info.copy()
 
         if level > 0:
-            return self.crop_image(crop_y=slice(level, level-1), info=info)
+            return self.crop_image(crop_y=slice(level-1, level), info=info)
         else:
             return self.crop_image(crop_y=slice(level, level+1), info=info)
 
