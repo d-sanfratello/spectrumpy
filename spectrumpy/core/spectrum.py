@@ -23,26 +23,41 @@ class Spectrum(SpectrumABC):
     def show(self,
              model=None, x=None,
              show=False, save=True, name='./spectrum_show.pdf',
-             **kwargs):
-        fig = plt.figure(**kwargs)
+             legend=False,
+             *args, **kwargs):
+        fig = plt.figure(*args)
         ax = fig.gca()
+
+        if 'title' in kwargs.keys():
+            ax.set_title(kwargs['title'])
+
         ax.grid()
         ax.plot(self.spectrum,
                 linestyle='solid', color='black', linewidth=0.5)
 
         if model is not None:
-            if hasattr(model, '__iter__'):
+            if hasattr(model, '__iter__') \
+                    and not hasattr(model[0], '__call__'):
                 model = np.asarray(model)
                 l, m, h = np.percentile(model, [5, 50, 95], axis=0)
 
                 ax.plot(x, m, lw=0.5, color='r')
                 ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
+            elif hasattr(model, '__iter__') \
+                    and hasattr(model[0], '__call__'):
+                for mdl in model:
+                    ax.plot(x, mdl(x),
+                            linestyle='dashed', linewidth=0.5,
+                            label=mdl.__name__)
             else:
                 ax.plot(x, model(x),
                         linestyle='solid', color='red', linewidth=0.5)
 
         ax.set_xlim(0, len(self.spectrum) - 1)
         ax.set_xlabel(r'[px]')
+
+        if legend:
+            ax.legend(loc='best')
 
         if save:
             fig.savefig(name)
