@@ -163,7 +163,7 @@ if __name__ == "__main__":
                       name='./exercise_data/corr_rotated_hydr.pdf',
                       title="Rotated hydrogen lamp image")
 
-    check_alignment = False
+    check_alignment = True
     if check_alignment:
         slices = [1130, 1230, 1330, 1430, 1530, 1630, 1730]
         mid_line = 1430
@@ -192,7 +192,7 @@ if __name__ == "__main__":
                        x=np.linspace(0, x_sup, x_len),
                        legend=True,
                        show=True,
-                       save=False,
+                       save=True,
                        title="Slices of rotated hydrogen spectrum image"
                              " with correction")
 
