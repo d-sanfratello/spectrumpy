@@ -28,7 +28,7 @@ class SpectrumRotatedImage(SpectrumRotatedImageABC, SpectrumImage):
         crop = np.copy(self.image[crop_y, crop_x])
 
         if info is None:
-            info = self.info
+            info = self.info.copy()
 
         return SpectrumCroppedImage(crop, crop_x, crop_y, info)
 

@@ -118,7 +118,7 @@ class SpectrumImage(SpectrumImageABC):
         rotated = scipy.ndimage.rotate(self.image, angle, reshape=True)
 
         if info is None:
-            info = self.info
+            info = self.info.copy()
 
         return SpectrumRotatedImage(rotated, angle, info)
 

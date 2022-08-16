@@ -16,7 +16,7 @@ class SpectrumCroppedImage(SpectrumCroppedImageABC, SpectrumRotatedImage):
         integrated = np.sum(self.image, axis=0)
 
         if info is None:
-            info = self.info
+            info = self.info.copy()
 
         return Spectrum(integrated, info)
 
