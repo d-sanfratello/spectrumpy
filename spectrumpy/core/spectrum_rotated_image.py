@@ -32,6 +32,18 @@ class SpectrumRotatedImage(SpectrumRotatedImageABC, SpectrumImage):
 
         return SpectrumCroppedImage(crop, crop_x, crop_y, info)
 
+    def slice_image(self, level, info=None):
+        if not 0 <= level < self.image.shape[0]:
+            raise ValueError(f"Slice {level} is outside of image edges.")
+
+        if info is None:
+            info = self.info.copy()
+
+        if level > 0:
+            return self.crop_image(crop_y=slice(level, level-1), info=info)
+        else:
+            return self.crop_image(crop_y=slice(level, level+1), info=info)
+
     @property
     def info(self):
         return self._info
