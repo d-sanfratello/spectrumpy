@@ -1,11 +1,14 @@
 import corner
 import h5py
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+from cpnest import CPNest
 from pathlib import Path
 
 from spectrumpy.io import SpectrumPath
+from spectrumpy.bayes_inference import LinearPosterior
 from spectrumpy.function_models import Linear
 
 cwd = Path(os.getcwd())
@@ -22,6 +25,7 @@ lamps = {n: l for n, l in zip(names, lamps_path)}
 samples_folder = cwd.joinpath('exercise_data')
 rot_samples = samples_folder.joinpath('rot_samples.h5')
 rot_corr_samples = samples_folder.joinpath('rot_corr_samples.h5')
+calibration_samples = samples_folder.joinpath('calibration_samples.h5')
 
 find_angle = False
 
@@ -29,8 +33,6 @@ find_angle = False
 if __name__ == "__main__":
     hydr_file = SpectrumPath(lamps['hydrogen'], is_lamp=True)
     hydr = hydr_file.images['0']
-
-    # hydr.show(figsize=figsize_sbs, save=False, show=False)
 
     if find_angle:
         # upper line
@@ -228,7 +230,93 @@ if __name__ == "__main__":
 
     sp = hydr_cropped.run_integration()
     sp.show(figsize=figsize_sbs,
-            show=True,
+            show=False,
             save=True,
             name='./exercise_data/int_spectrum_hydr.pdf',
             title="Hydrogen lamp spectrum")
+
+    # Calibration lines
+    px = [1041, 1737, 1945, 2041]
+    s_px = [4, 3, 3, 3]
+    lam = [656.279, 486.135, 434.0472, 410.1734]  # nm
+    s_lam = [3e-3, 5e-3, 6e-4, 6e-4]
+
+    calibrate_lines = False
+    if calibrate_lines:
+        bounds = [[-0.5, 0], [800, 1000]]
+        linear_posterior = LinearPosterior(px, lam, s_px, s_lam, bounds)
+
+        job = CPNest(
+            linear_posterior,
+            verbose=1,
+            nlive=1000,
+            maxmcmc=1500,
+            nnest=4,
+            nensemble=4,
+            seed=1234
+        )
+
+        job.run()
+
+        post = job.posterior_samples.ravel()
+        samples = np.column_stack([post['m'], post['q']])
+        
+        fig = corner.corner(samples, labels=['m', 'q'],
+                            quantiles=[.05, .95],
+                            filename='joint_calibration.pdf',
+                            show_titles=True,
+                            title_fmt='.3e',
+                            title_kwargs={'fontsize': 8},
+                            label_kwargs={'fontsize': 8},
+                            use_math_text=True)
+
+        fig.savefig('./exercise_data/joint_calibration.pdf')
+        plt.show()
+        plt.close()
+    
+        with h5py.File(calibration_samples, 'w') as hf:
+            hf.create_dataset('line params', data=samples)
+    else:
+        with h5py.File(calibration_samples, 'r') as hf:
+            samples = hf['line params'][:]
+
+    m_16, m_50, m_84 = corner.quantile(samples.T[0], [0.16, 0.5, 0.84])
+    m_m, m_p = m_50 - m_16, m_84 - m_50
+
+    q_16, q_50, q_84 = corner.quantile(samples.T[1], [0.16, 0.5, 0.84])
+    q_m, q_p = q_50 - q_16, q_84 - q_50
+
+    print(f"m = {m_50:.3e} (+){m_p:.3e} (-){m_m:.3e}")
+    print(f"q = {q_50:.3e} (+){q_p:.3e} (-){q_m:.3e}")
+
+    # Plot calibration - Transfer to spectrum.py
+    fig = plt.figure(figsize=figsize_sbs)
+    ax = fig.gca()
+    ax.grid()
+    ax.set_title("Spectrum calibration")
+
+    ax.errorbar(px, lam, s_lam, s_px,
+                capsize=2, linestyle='',
+                ms=2)
+
+    lims = len(sp.spectrum)
+    x = np.linspace(-0.5, lims - 0.5, lims + 1)
+    models = np.array(
+        [Linear.func(x, p[0], p[1]) for p in samples]
+    )
+    l, m, h = np.percentile(models, [5, 50, 95], axis=0)
+
+    ax.plot(x, m, lw=0.5, color='r')
+    ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
+
+    ax.set_xlim(1000, 2100)
+    ax.set_ylim(400, 700)
+
+    ax.set_xlabel('[px]')
+    ax.set_ylabel('[nm]')
+
+    ax.legend(loc='best')
+
+    fig.savefig('./exercise_data/calibration_fit.pdf')
+    plt.show()
+    plt.close()
