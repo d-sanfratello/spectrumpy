@@ -163,7 +163,7 @@ if __name__ == "__main__":
                       name='./exercise_data/corr_rotated_hydr.pdf',
                       title="Rotated hydrogen lamp image")
 
-    check_alignment = True
+    check_alignment = False
     if check_alignment:
         slices = [1130, 1230, 1330, 1430, 1530, 1630, 1730]
         mid_line = 1430
