@@ -94,9 +94,7 @@ if __name__ == "__main__":
     slices = [1150, 1250, 1350, 1450, 1550, 1650, 1768]
     mid_line = 1450
     hydr_corr_slices = {
-        line: hydr_rotated.crop_image(crop_y=[slices[n_line] - 1,
-                                      slices[n_line]])
-        for n_line, line in enumerate(slices)
+        line: hydr_rotated.slice_image(line) for line in slices
     }
 
     int_models = {
@@ -170,9 +168,7 @@ if __name__ == "__main__":
         slices = [1130, 1230, 1330, 1430, 1530, 1630, 1730]
         mid_line = 1430
         hydr_corr_slices = {
-            line: hydr_rotated.crop_image(crop_y=[slices[n_line] - 1,
-                                                  slices[n_line]])
-            for n_line, line in enumerate(slices)
+            line: hydr_rotated.slice_image(line) for line in slices
         }
 
         int_models = {
