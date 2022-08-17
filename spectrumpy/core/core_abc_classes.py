@@ -61,10 +61,6 @@ class SpectrumABC(ABC):
         pass
 
     @abstractmethod
-    def calibrate(self, order, method, bounds_pars, verbose, n, delta):
-        pass
-
-    @abstractmethod
     def compare(self, spectrum):
         pass
 
