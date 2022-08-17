@@ -316,8 +316,10 @@ if __name__ == "__main__":
     sp.assign_dataset(dataset)
     sp.assign_calibration(Linear(m_50, q_50), units='nm')
 
-    sp.show(show=True, save=True,
+    sp.show(show=False, save=True,
             name='./exercise_data/calibrated_H-I.pdf',
             legend=False,
             calibration=True,
             title='Calibrated H-I spectrum')
+
+    sp.save_info(filename='./exercise_data/hydr_calibration.json')
