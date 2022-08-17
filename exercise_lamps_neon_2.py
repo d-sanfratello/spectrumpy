@@ -10,8 +10,8 @@ from pathlib import Path
 from spectrumpy.core.spectrum import Spectrum
 from spectrumpy.dataset import Dataset
 from spectrumpy.io import SpectrumPath
-from spectrumpy.bayes_inference import LinearPosterior
-from spectrumpy.function_models import Linear
+from spectrumpy.bayes_inference import QuadraticPosterior
+from spectrumpy.function_models import Quadratic
 
 cwd = Path(os.getcwd())
 
@@ -25,11 +25,9 @@ names = [l.name.split(f'{ext}')[0] for l in lamps_path]
 lamps = {n: l for n, l in zip(names, lamps_path)}
 
 samples_folder = cwd.joinpath('exercise_data')
-rot_samples = samples_folder.joinpath('rot_samples.h5')
-rot_corr_samples = samples_folder.joinpath('rot_corr_samples.h5')
-calibration_samples = samples_folder.joinpath('calibration_samples.h5')
+calibration_samples = samples_folder.joinpath('Ne_calib_samples.h5')
 
-calibrate_lines = False
+calibrate_lines = True
 
 if __name__ == "__main__":
     info = Spectrum.load_info('./exercise_data/hydr_calibration.json')
@@ -53,25 +51,29 @@ if __name__ == "__main__":
                       title="Cropped neon lamp image")
 
     sp = neon_cropped.run_integration()
-    sp.show(show=True, save=False,
+    sp.show(show=False, save=False,
             name='./exercise_data/calibrated_Ne-I.pdf',
             legend=False,
             calibration=True,
             title='Calibrated Ne-I spectrum')
 
-
     # Calibration lines
-    px = [1041, 1737, 1945, 2041]
-    s_px = [4, 3, 3, 3]
-    lam = [656.279, 486.135, 434.0472, 410.1734]  # nm
-    s_lam = [3e-3, 5e-3, 6e-4, 6e-4]
+    x = [410.5, 434.2, 485.4, 584.0, 639.3, 656.5, 695.0, 706.1]  # nm
+    s_x = [1.5, 1.4, 1.5, 1.5, 3.8, 2.3, 1.2, 1.7]
+    lam = [410.1734, 434.0472, 486.135, 585.24878, 640.22480, 656.279,
+           692.94672, 703.24128]  # nm
+    s_lam = [6e-4, 6e-4, 5e-3, 5e-5, 10e-5, 3e-3, 4e-5, 4e-5]
+    names = [r'H-$\delta$', r'H-$\gamma$', r'H-$\beta$', r'Ne-I', r'Ne-I',
+             r'H-$\alpha$', r'Ne-I', r'Ne-I']
+
+    dataset = Dataset(px=x, errpx=s_x, lines=lam, errlines=s_lam, names=names)
 
     if calibrate_lines:
-        bounds = [[-0.5, 0], [800, 1000]]
-        linear_posterior = LinearPosterior(px, lam, s_px, s_lam, bounds)
+        bounds = [[-10, 10], [-2, 5], [-20, 20]]
+        quadratic_posterior = QuadraticPosterior(x, lam, s_x, s_lam, bounds)
 
         job = CPNest(
-            linear_posterior,
+            quadratic_posterior,
             verbose=1,
             nlive=1000,
             maxmcmc=1500,
@@ -83,35 +85,52 @@ if __name__ == "__main__":
         job.run()
 
         post = job.posterior_samples.ravel()
-        samples = np.column_stack([post['m'], post['q']])
-
-        fig = corner.corner(samples, labels=['m', 'q'],
-                            quantiles=[.05, .95],
-                            filename='joint_calibration.pdf',
-                            show_titles=True,
-                            title_fmt='.3e',
-                            title_kwargs={'fontsize': 8},
-                            label_kwargs={'fontsize': 8},
-                            use_math_text=True)
-
-        fig.savefig('./exercise_data/joint_calibration.pdf')
-        plt.show()
-        plt.close()
+        samples = np.column_stack([post['a'], post['b'], post['c']])
 
         with h5py.File(calibration_samples, 'w') as hf:
-            hf.create_dataset('line params', data=samples)
-    # else:
-        # with h5py.File(calibration_samples, 'r') as hf:
-        #     samples = hf['line params'][:]
+            hf.create_dataset('params', data=samples)
 
-    # m_16, m_50, m_84 = corner.quantile(samples.T[0], [0.16, 0.5, 0.84])
-    # m_m, m_p = m_50 - m_16, m_84 - m_50
-    #
-    # q_16, q_50, q_84 = corner.quantile(samples.T[1], [0.16, 0.5, 0.84])
-    # q_m, q_p = q_50 - q_16, q_84 - q_50
-    #
-    # print(f"m = {m_50:.3e} (+){m_p:.3e} (-){m_m:.3e}")
-    # print(f"q = {q_50:.3e} (+){q_p:.3e} (-){q_m:.3e}")
+        # fig = corner.corner(samples, labels=['a', 'b' 'c'],
+        #                     quantiles=[.05, .95],
+        #                     filename='Ne_calibration.pdf',
+        #                     show_titles=True,
+        #                     title_fmt='.3e',
+        #                     title_kwargs={'fontsize': 8},
+        #                     label_kwargs={'fontsize': 8},
+        #                     use_math_text=True)
+        #
+        # fig.savefig('./exercise_data/Ne_calibration.pdf')
+        # plt.show()
+        # plt.close()
+    else:
+        with h5py.File(calibration_samples, 'r') as hf:
+            samples = hf['params'][:]
+
+    fig = corner.corner(samples, labels=['a', 'b', 'c'],
+                        quantiles=[.05, .95],
+                        filename='Ne_calibration.pdf',
+                        show_titles=True,
+                        title_fmt='.3e',
+                        title_kwargs={'fontsize': 8},
+                        label_kwargs={'fontsize': 8},
+                        use_math_text=True)
+
+    fig.savefig('./exercise_data/Ne_calibration.pdf')
+    plt.show()
+    plt.close()
+
+    a_16, a_50, a_84 = corner.quantile(samples.T[0], [0.16, 0.5, 0.84])
+    a_m, a_p = a_50 - a_16, a_84 - a_50
+
+    b_16, b_50, b_84 = corner.quantile(samples.T[1], [0.16, 0.5, 0.84])
+    b_m, b_p = b_50 - b_16, b_84 - b_50
+
+    c_16, c_50, c_84 = corner.quantile(samples.T[2], [0.16, 0.5, 0.84])
+    c_m, c_p = c_50 - c_16, c_84 - c_50
+
+    print(f"m = {a_50:.3e} (+){a_p:.3e} (-){a_m:.3e}")
+    print(f"q = {b_50:.3e} (+){b_p:.3e} (-){b_m:.3e}")
+    print(f"q = {c_50:.3e} (+){c_p:.3e} (-){c_m:.3e}")
 
     # Plot calibration
     # x = np.linspace(1000, 2100, 1000)
