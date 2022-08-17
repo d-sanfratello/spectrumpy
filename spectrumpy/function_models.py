@@ -265,3 +265,23 @@ class Quartic(FunctionABC):
     def func(cls, x, *args):
         a, b, c, d, e = args
         return a * x**4 + b * x**3 + c * x**2 + d * x + e
+
+
+class FunctionGenerator:
+    def __init__(self, order, pars):
+        self.order = order
+        self.pars = pars
+
+    def assign(self):
+        if self.order == 0:
+            return Constant(*self.pars)
+        elif self.order == 1:
+            return Linear(*self.pars)
+        elif self.order == 2:
+            return Quadratic(*self.pars)
+        elif self.order == 3:
+            return Cubic(*self.pars)
+        elif self.order == 4:
+            return Quartic(*self.pars)
+        else:
+            raise ValueError("Unknown order.")
