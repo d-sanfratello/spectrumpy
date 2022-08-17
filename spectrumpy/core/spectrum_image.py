@@ -10,11 +10,15 @@ from spectrumpy.bayes_inference import RotationPosterior
 
 
 class SpectrumImage:
-    def __init__(self, image, is_lamp, calibration):
+    def __init__(self, image, is_lamp, info=None):
         self.image = image
-        self._info = {'original': np.copy(image),
-                      'lamp': is_lamp,
-                      'calibration': calibration}
+
+        if info is None:
+            self._info = {'original': np.copy(image),
+                          'lamp': is_lamp}
+        else:
+            self._info = info.copy()
+            self._info['original'] = np.copy(image)
 
     def show(self,
              log=True, model=None, x=None,
