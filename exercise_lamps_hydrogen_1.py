@@ -83,7 +83,7 @@ if __name__ == "__main__":
     hydr.show(figsize=figsize_sbs,
               model=models,
               x=x,
-              show=False,
+              show=True,
               save=True,
               name='./exercise_data/image_hydr.pdf',
               title="Hydrogen lamp image")
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     # Rotating image by alpha
     hydr_rotated = hydr.rotate_image(alpha)
     hydr_rotated.show(figsize=figsize_sbs,
-                      show=False,
+                      show=True,
                       save=True,
                       name='./exercise_data/rotated_hydr.pdf',
                       title="Rotated hydrogen lamp image")
@@ -124,7 +124,7 @@ if __name__ == "__main__":
                    model=models,
                    x=np.linspace(0, x_sup, x_len),
                    legend=True,
-                   show=False,
+                   show=True,
                    save=True,
                    name='./exercise_data/hydr_align_slices.pdf',
                    title="Slices of rotated hydrogen spectrum image")
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     # Rotating image by alphacorr
     hydr_rotated = hydr.rotate_image(alpha-alpha_corr)
     hydr_rotated.show(figsize=figsize_sbs,
-                      show=False,
+                      show=True,
                       save=True,
                       name='./exercise_data/corr_rotated_hydr.pdf',
                       title="Rotated hydrogen lamp image")
@@ -204,7 +204,7 @@ if __name__ == "__main__":
     crops_y = [1330, 1530]
     hydr_cropped = hydr_rotated.crop_image(crop_y=crops_y)
     hydr_cropped.show(figsize=figsize_sbs,
-                      show=False,
+                      show=True,
                       save=True,
                       name='./exercise_data/cropped_hydr.pdf',
                       title="Cropped hydrogen lamp image")
@@ -232,7 +232,7 @@ if __name__ == "__main__":
 
     sp = hydr_cropped.run_integration()
     sp.show(figsize=figsize_sbs,
-            show=False,
+            show=True,
             save=True,
             name='./exercise_data/int_spectrum_hydr.pdf',
             title="Hydrogen lamp spectrum")
@@ -304,7 +304,7 @@ if __name__ == "__main__":
                             units='nm',
                             xlim=[1000, 2100],
                             ylim=[400, 700],
-                            show=False, save=True,
+                            show=True, save=True,
                             name='./exercise_data/calibration_fit.pdf',
                             legend=False)
 
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     sp.assign_dataset(dataset)
     sp.assign_calibration(Linear(m_50, q_50), units='nm')
 
-    sp.show(show=False, save=True,
+    sp.show(show=True, save=True,
             name='./exercise_data/calibrated_H-I.pdf',
             legend=False,
             calibration=True,
