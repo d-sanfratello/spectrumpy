@@ -28,8 +28,8 @@ class RotationPosterior(model.Model):
 
         exp = m * self.x + q
         log_l = -0.5 * (self.y - exp)**2 / s2
-        log_l -= 2 * np.pi
-        log_l -= np.sqrt(s2)
+        log_l -= np.log(np.sqrt(2 * np.pi))
+        log_l -= np.log(np.sqrt(s2))
 
         return log_l.sum()
 
