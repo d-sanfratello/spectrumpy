@@ -289,34 +289,19 @@ if __name__ == "__main__":
     print(f"m = {m_50:.3e} (+){m_p:.3e} (-){m_m:.3e}")
     print(f"q = {q_50:.3e} (+){q_p:.3e} (-){q_m:.3e}")
 
-    # Plot calibration - Transfer to spectrum.py
-    fig = plt.figure(figsize=figsize_sbs)
-    ax = fig.gca()
-    ax.grid()
-    ax.set_title("Spectrum calibration")
+    # Plot calibration
+    x = np.linspace(1000, 2100, 1000)
+    models = [
+        Linear.func(x, s[0], s[1]) for s in samples
+    ]
 
-    ax.errorbar(px, lam, s_lam, s_px,
-                capsize=2, linestyle='',
-                ms=2)
-
-    lims = len(sp.spectrum)
-    x = np.linspace(-0.5, lims - 0.5, lims + 1)
-    models = np.array(
-        [Linear.func(x, p[0], p[1]) for p in samples]
-    )
-    l, m, h = np.percentile(models, [5, 50, 95], axis=0)
-
-    ax.plot(x, m, lw=0.5, color='r')
-    ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
-
-    ax.set_xlim(1000, 2100)
-    ax.set_ylim(400, 700)
-
-    ax.set_xlabel('[px]')
-    ax.set_ylabel('[nm]')
-
-    ax.legend(loc='best')
-
-    fig.savefig('./exercise_data/calibration_fit.pdf')
-    plt.show()
-    plt.close()
+    sp.show_calibration_fit(px, lam, s_px, s_lam=s_lam,
+                            model=models,
+                            x=x,
+                            title="Spectrum calibration",
+                            units='nm',
+                            xlim=[1000, 2100],
+                            ylim=[400, 700],
+                            show=True, save=True,
+                            name='./exercise_data/calibration_fit.pdf',
+                            legend=False)

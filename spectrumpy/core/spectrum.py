@@ -66,6 +66,65 @@ class Spectrum(SpectrumABC):
 
         plt.close()
 
+    def show_calibration_fit(self,
+                             px, lam, s_px, s_lam=None,
+                             model=None, x=None,
+                             show=False, save=True,
+                             name='./show_calibration_fit.pdf',
+                             legend=False,
+                             *args, **kwargs):
+        if model is None:
+            raise ValueError("You need to pass a model, to show the fit.")
+        if 'units' not in kwargs.keys():
+            raise KeyError("Wavelength units must be passed.")
+
+        fig = plt.figure(*args)
+        ax = fig.gca()
+
+        if 'title' in kwargs.keys():
+            ax.set_title(kwargs['title'])
+
+        ax.grid()
+        ax.errorbar(px, lam, s_lam, s_px,
+                    capsize=2, linestyle='',
+                    ms=2)
+
+        if model is not None:
+            if hasattr(model, '__iter__') \
+                    and not hasattr(model[0], '__call__'):
+                model = np.asarray(model)
+                l, m, h = np.percentile(model, [5, 50, 95], axis=0)
+
+                ax.plot(x, m, lw=0.5, color='r')
+                ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
+            elif hasattr(model, '__iter__') \
+                    and hasattr(model[0], '__call__'):
+                for mdl in model:
+                    ax.plot(x, mdl(x),
+                            linestyle='dashed', linewidth=0.5,
+                            label=mdl.__name__)
+            else:
+                ax.plot(x, model(x),
+                        linestyle='solid', color='red', linewidth=0.5)
+
+        if 'xlim' in kwargs.keys():
+            ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
+        if 'ylim' in kwargs.keys():
+            ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
+
+        ax.set_xlabel('[px]')
+        ax.set_ylabel(f"[{kwargs['units']}]")
+
+        if legend:
+            ax.legend(loc='best')
+
+        if save:
+            fig.savefig(name)
+        if show:
+            plt.show()
+
+        plt.close()
+
     def smooth(self, size, lamp):
         if self.info['lamp']:
             raise ValueError("It makes no sense to smooth the lamp.")
