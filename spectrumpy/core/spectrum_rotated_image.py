@@ -6,7 +6,7 @@ from .spectrum_image import SpectrumImage
 class SpectrumRotatedImage(SpectrumImage):
     def __init__(self, image, angle, info):
         SpectrumImage.__init__(self, image,
-                               info['lamp'], info['calibration'])
+                               info['lamp'], info)
         self._info = info
         self._info['angle'] = angle
 
