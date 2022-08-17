@@ -57,7 +57,7 @@ class SpectrumABC(ABC):
         pass
 
     @abstractmethod
-    def assign_dataset(self, lines, px, errpx, names):
+    def assign_dataset(self, *, lines, px, errpx, errlines, names):
         pass
 
     @abstractmethod
