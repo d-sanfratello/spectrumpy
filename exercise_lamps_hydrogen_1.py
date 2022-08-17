@@ -7,6 +7,7 @@ import os
 from cpnest import CPNest
 from pathlib import Path
 
+from spectrumpy.dataset import Dataset
 from spectrumpy.io import SpectrumPath
 from spectrumpy.bayes_inference import LinearPosterior
 from spectrumpy.function_models import Linear
@@ -28,6 +29,10 @@ rot_corr_samples = samples_folder.joinpath('rot_corr_samples.h5')
 calibration_samples = samples_folder.joinpath('calibration_samples.h5')
 
 find_angle = False
+find_angle_correction = False
+check_alignment = False
+show_top_and_bottom = False
+calibrate_lines = False
 
 
 if __name__ == "__main__":
@@ -124,8 +129,7 @@ if __name__ == "__main__":
                    name='./exercise_data/hydr_align_slices.pdf',
                    title="Slices of rotated hydrogen spectrum image")
 
-    angle_correction = False
-    if angle_correction:
+    if find_angle_correction:
         y = [1744, 1745, 1746, 1747, 1750, 1752, 1754]
         sy = [2, 4, 4, 3, 3, 2, 2]
         x = [1768, 1650, 1550, 1450, 1350, 1250, 1150]
@@ -165,7 +169,6 @@ if __name__ == "__main__":
                       name='./exercise_data/corr_rotated_hydr.pdf',
                       title="Rotated hydrogen lamp image")
 
-    check_alignment = False
     if check_alignment:
         slices = [1130, 1230, 1330, 1430, 1530, 1630, 1730]
         mid_line = 1430
@@ -206,7 +209,6 @@ if __name__ == "__main__":
                       name='./exercise_data/cropped_hydr.pdf',
                       title="Cropped hydrogen lamp image")
 
-    show_top_and_bottom = False
     if show_top_and_bottom:
         ylims = hydr_cropped.image.shape[0]
         hydr_cropped_up = hydr_cropped.crop_image(crop_y=[ylims-1, ylims])
@@ -241,7 +243,7 @@ if __name__ == "__main__":
     lam = [656.279, 486.135, 434.0472, 410.1734]  # nm
     s_lam = [3e-3, 5e-3, 6e-4, 6e-4]
 
-    calibrate_lines = False
+
     if calibrate_lines:
         bounds = [[-0.5, 0], [800, 1000]]
         linear_posterior = LinearPosterior(px, lam, s_px, s_lam, bounds)
@@ -302,6 +304,20 @@ if __name__ == "__main__":
                             units='nm',
                             xlim=[1000, 2100],
                             ylim=[400, 700],
-                            show=True, save=True,
+                            show=False, save=True,
                             name='./exercise_data/calibration_fit.pdf',
                             legend=False)
+
+    # Save calibration
+    dataset = Dataset(lines=lam, errlines=s_lam,
+                      px=px, errpx=s_px,
+                      names=[r'H-$\alpha$', r'H-$\beta$', r'H-$\gamma$',
+                             r'H-$\delta$'])
+    sp.assign_dataset(dataset)
+    sp.assign_calibration(Linear(m_50, q_50), units='nm')
+
+    sp.show(show=True, save=True,
+            name='./exercise_data/calibrated_H-I.pdf',
+            legend=False,
+            calibration=True,
+            title='Calibrated H-I spectrum')
