@@ -1,3 +1,4 @@
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 import warnings
@@ -15,6 +16,11 @@ class Spectrum:
 
         self.dataset = None
         self.calibration = None
+
+        if 'dataset' in self.info.keys():
+            self.dataset = self.info['dataset']
+        if 'calibration' in self.info.keys():
+            self.calibration = self.info['calibration']
 
     def show(self,
              model=None, x=None,
@@ -194,6 +200,76 @@ class Spectrum:
 
         self._info['calibration'] = calibration
         self._info['calib units'] = units
+
+    def save_info(self, filename='./info.json'):
+
+        dict_ = self.info.copy()
+        dict_['original'] = None
+
+        calibration = dict_.pop('calibration')
+        dict_['calib order'] = calibration.order
+        dict_['calib pars'] = calibration.pars
+
+        dataset = dict_.pop('dataset')
+        dataset_dict = dataset.__dict__.copy()
+        for key, value in dataset_dict.items():
+            if isinstance(value, np.ndarray):
+                value = value.tolist()
+            dict_[key] = value
+
+        crop_x = dict_.pop('crop_x')
+        crop_y = dict_.pop('crop_y')
+
+        if not isinstance(crop_x, slice):
+            crop_x = slice(*crop_x)
+        if not isinstance(crop_y, slice):
+            crop_y = slice(*crop_y)
+
+        dict_['crop_x'] = [crop_x.start, crop_x.stop, crop_x.step]
+        dict_['crop_y'] = [crop_y.start, crop_y.stop, crop_y.step]
+
+        s = json.dumps(dict_, indent=4)
+
+        with open(filename, 'w') as f:
+            json.dump(s, f)
+
+    @classmethod
+    def load_info(cls, filename):
+        with open(filename, 'r') as fjson:
+            dictjson = json.load(fjson)
+
+        dict_ = json.loads(dictjson)
+
+        order = dict_.pop('calib order')
+        pars = dict_.pop('calib pars')
+
+        px = dict_.pop('px')
+        errpx = dict_.pop('errpx')
+        lines = dict_.pop('lines')
+        errlines = dict_.pop('errlines')
+
+        names = dict_.pop('names')
+        str_keys = list(names.keys())
+        for key in str_keys:
+            new_key = float(key)
+            label = names.pop(key)
+            names[new_key] = label
+
+        crop_x = dict_.pop('crop_x')
+        crop_y = dict_.pop('crop_y')
+
+        info_dict = dict_.copy()
+
+        info_dict['crop_x'] = slice(*crop_x)
+        info_dict['crop_y'] = slice(*crop_y)
+
+        f_gen = fs.FunctionGenerator(order=order, pars=pars)
+        info_dict['calibration'] = f_gen.assign()
+        info_dict['dataset'] = Dataset(px=px, errpx=errpx,
+                                       lines=lines, errlines=errlines,
+                                       names=names)
+
+        return info_dict
 
     def compare(self, spectrum):
         # FIXME: low cohesion
