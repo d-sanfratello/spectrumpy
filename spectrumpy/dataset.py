@@ -2,7 +2,7 @@ import numpy as np
 import warnings
 
 
-class DataSet:
+class Dataset:
     def __init__(self, lines, px, errpx, errlines, names):
         self.px = np.asarray(px)
         self.errpx = np.asarray(errpx)
