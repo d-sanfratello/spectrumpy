@@ -19,12 +19,17 @@ class Spectrum(SpectrumABC):
         self._info = info
 
         self.dataset = None
+        self.calibration = None
 
     def show(self,
              model=None, x=None,
              show=False, save=True, name='./spectrum_show.pdf',
              legend=False,
+             calibration=True,
              *args, **kwargs):
+        # FIXME: low cohesion? try splitting in a part only with spectrum
+        #  and another only with calibration.
+
         fig = plt.figure(*args)
         ax = fig.gca()
 
@@ -32,29 +37,66 @@ class Spectrum(SpectrumABC):
             ax.set_title(kwargs['title'])
 
         ax.grid()
-        ax.plot(self.spectrum,
-                linestyle='solid', color='black', linewidth=0.5)
+
+        if calibration and self.calibration is not None:
+            x_clb = np.linspace(0, len(self.spectrum) - 1, len(self.spectrum))
+            x_clb = self.calibration(x_clb)
+            ax.plot(x_clb, self.spectrum,
+                    linestyle='solid', color='black', linewidth=0.5)
+        else:
+            ax.plot(self.spectrum,
+                    linestyle='solid', color='black', linewidth=0.5)
 
         if model is not None:
+            if calibration and self.calibration is not None:
+                x_clb = self.calibration(x)
+            else:
+                x_clb = x
+
             if hasattr(model, '__iter__') \
                     and not hasattr(model[0], '__call__'):
                 model = np.asarray(model)
                 l, m, h = np.percentile(model, [5, 50, 95], axis=0)
 
-                ax.plot(x, m, lw=0.5, color='r')
-                ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
+                ax.plot(x_clb, m, lw=0.5, color='r')
+                ax.fill_between(x_clb, l, h, facecolor='red', alpha=0.5)
             elif hasattr(model, '__iter__') \
                     and hasattr(model[0], '__call__'):
                 for mdl in model:
-                    ax.plot(x, mdl(x),
+                    ax.plot(x_clb, mdl(x),
                             linestyle='dashed', linewidth=0.5,
                             label=mdl.__name__)
             else:
-                ax.plot(x, model(x),
+                ax.plot(x_clb, model(x),
                         linestyle='solid', color='red', linewidth=0.5)
 
-        ax.set_xlim(0, len(self.spectrum) - 1)
-        ax.set_xlabel(r'[px]')
+        if 'xlim' in kwargs.keys():
+            ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
+        if 'ylim' in kwargs.keys():
+            ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
+
+        if calibration and self.calibration is not None:
+            ax.set_xlabel(f"[{self._info['calib units']}]")
+        else:
+            ax.set_xlabel(r'[px]')
+
+        dset = self.dataset
+        for lam in dset.lines:
+            if lam == dset.lines.min() \
+                    or lam == dset.lines.max():
+                ax.axvline(lam,
+                           ymin=0, ymax=1, linewidth=0.5, color='red',
+                           linestyle='dotted',
+                           label='calib limits')
+            else:
+                ax.axvline(lam,
+                           ymin=0, ymax=1, linewidth=0.5, color='navy',
+                           linestyle='dashed')
+                ax.text(lam, self.spectrum.max() / 2,
+                        f'{dset.names[lam]}',
+                        rotation=90, verticalalignment='center',
+                        horizontalalignment='left',
+                        size=7.5, color='navy')
 
         if legend:
             ax.legend(loc='best')
@@ -146,168 +188,19 @@ class Spectrum(SpectrumABC):
 
         return Spectrum(weighted, self.info)
 
-    def assign_dataset(self, lines, px, errpx, names):
-        dataset = DataSet(lines, px, errpx, names)
+    def assign_dataset(self, *, lines, px, errpx, errlines, names):
+        dataset = DataSet(lines, px, errpx, errlines=errlines, names=names)
 
         self._info['dataset'] = dataset
 
-    def calibrate(self, order, method='ls', bounds_pars=None,
-                  verbose=False, n=1000, delta=0.1):
-        # FIXME: very low cohesion
-        if order not in [1, 2, 3, 4]:
-            raise ValueError("Unknown order.")
-        if method not in ['ls', 'bayes']:
-            raise ValueError("Unknown calibration method.")
+    def assign_calibration(self, calibration, units):
+        if not hasattr(calibration, '__call__'):
+            raise TypeError("'calibration' must be a callable.")
 
-        if order == 1:
-            self.model = fs.Linear
-        elif order == 2:
-            self.model = fs.Quadratic
-        elif order == 3:
-            self.model = fs.Cubic
-        elif order == 4:
-            self.model = fs.Quartic
+        self.calibration = calibration
 
-        if method == 'ls':
-            popt, pcov = curve_fit(self.model.func, self.dataset.px,
-                                   self.dataset.lines)
-
-            model = self.model(*popt)
-            errs = abs(model.derivative(self.dataset.px)) * self.dataset.errpx
-
-            popt, pcov = curve_fit(self.model.func, self.dataset.px,
-                                   self.dataset.lines,
-                                   sigma=errs,
-                                   absolute_sigma=True,
-                                   p0=popt)
-
-            self.calibration = self.model(*popt)
-
-            chisq = ((self.dataset.lines - self.calibration(
-                self.dataset.px)) ** 2 / self.dataset.errpx ** 2).sum()
-            dof = len(self.dataset.lines) - len(popt)
-
-            fit_status = FitStatus(popt, pcov, chisq, dof,
-                                   order=self.calibration.order)
-            return fit_status
-
-        elif method == 'bayes':
-            # warnings.warn("Not yet implemented, running with `method='ls'`.")
-            # return self.run_calibration(order=order, method='ls')
-
-            if bounds_pars is None:
-                raise ValueError("Must define bounds for bayes estimation.")
-
-            self.sampler = MHsampler(self.dataset.px, self.dataset.lines,
-                                     self.dataset.errpx,
-                                     bounds_pars=bounds_pars,
-                                     bounds_x=[0, len(self.int) - 1],
-                                     n=n, delta=delta)
-
-            def log_likelihood(x, y, errx, x_hat, theta):
-                model = self.model(*theta)
-                zeros = model.zeros()
-
-                if zeros is None:
-                    return -np.inf
-
-                term1 = np.array([np.exp(
-                    -0.5 * (x - z) ** 2 / errx ** 2) / abs(model.derivative(z))
-                                  for z in zeros])
-                term1 = term1.sum(axis=0)
-
-                logs = np.log(term1).sum()
-
-                if not np.isfinite(logs):
-                    return -np.inf
-                else:
-                    return logs
-
-            self.sampler.log_likelihood = log_likelihood
-
-            samples, x_hat_s, s_orig, x_orig, acc, rej = self.sampler.run(
-                verbose=verbose)
-
-            self.calibration = self.model(*samples.mean(axis=1))
-
-            return samples, x_hat_s, s_orig, x_orig, acc, rej
-
-    def show_calibration(self, lamp, exclude=None, **kwargs):
-        # FIXME: low cohesion (maybe)?
-        if not isinstance(lamp, Spectrum):
-            raise TypeError("`lamp` must be a `Spectrum` instance.")
-        if self.model is None:
-            raise AttributeError("Calibration has not been run, yet.")
-
-        fig = plt.figure(**kwargs)
-        ax = plt.subplot2grid((4, 1), (0, 0), rowspan=3, fig=fig)
-        ax.grid()
-        ax.errorbar(self.dataset.px, self.dataset.lines,
-                    xerr=self.dataset.errpx,
-                    linestyle='', capsize=2, marker=',')
-
-        x = np.linspace(0, len(lamp.int) - 1, len(lamp.int))
-        ax.plot(x, self.calibration(x),
-                linestyle='solid', color='black', linewidth=0.5)
-        ax.set_xlim(0, x[-1])
-        ax.set_ylabel(r'$\lambda$ [$\mathring{A}$]')
-        ax.set_xticklabels([])
-        ax1 = plt.subplot2grid((4, 1), (3, 0), fig=fig)
-        ax1.grid()
-        errs = abs(
-            self.calibration.derivative(self.dataset.px)) * self.dataset.errpx
-        ax1.scatter(self.dataset.px, (self.dataset.lines - self.calibration(
-            self.dataset.px)) / errs,
-                    marker='+', color='black')
-        ax1.set_xlim(0, x[-1])
-        ax1.set_ylabel(r'Norm.Res.')
-        ax1.set_xlabel('[px]')
-        fig.tight_layout()
-
-        fig_l = plt.figure(**kwargs)
-        ax = fig_l.gca()
-        ax.grid()
-        line = self.calibration(x)
-        ax.plot(line, lamp.int, linestyle='solid', color='black',
-                linewidth=0.5)
-        for lam in self.dataset.lines:
-            if lam == self.dataset.lines.min() or lam == self.dataset.lines.max():
-                ax.axvline(lam, ymin=0, ymax=1, linewidth=0.5, color='red',
-                           linestyle='dotted')
-            else:
-                ax.axvline(lam, ymin=0, ymax=1, linewidth=0.5, color='navy',
-                           linestyle='dashed')
-                ax.text(lam, lamp.int.max() / 2,
-                        '{:s}'.format(self.dataset.names[lam]),
-                        rotation=90, verticalalignment='center',
-                        horizontalalignment='left',
-                        size=7.5, color='navy')
-        ax.set_xlim(line.min(), line.max())
-        ax.set_xlabel(r'$\lambda$ [$\mathring{A}$]')
-
-        fig_s = plt.figure(**kwargs)
-        ax = fig_s.gca()
-        ax.grid()
-        line = self.calibration(x)
-        ax.plot(line, self.int, linestyle='solid', color='black',
-                linewidth=0.5)
-        for lam in self.dataset.lines:
-            if lam == self.dataset.lines.min() or lam == self.dataset.lines.max():
-                ax.axvline(lam, ymin=0, ymax=1, linewidth=0.5, color='red',
-                           linestyle='dotted')
-            elif exclude is not None and self.dataset.names[
-                lam] not in exclude:
-                ax.axvline(lam, ymin=0, ymax=1, linewidth=0.5, color='navy',
-                           linestyle='dashed')
-                ax.text(lam, (self.int.max() + self.int.min()) / 2,
-                        '{:s}'.format(self.dataset.names[lam]),
-                        rotation=90, verticalalignment='center',
-                        horizontalalignment='left',
-                        size=7.5, color='navy')
-        ax.set_xlim(line.min(), line.max())
-        ax.set_xlabel(r'$\lambda$ [$\mathring{A}$]')
-
-        plt.show()
+        self._info['calibration'] = calibration
+        self._info['calib units'] = units
 
     def compare(self, spectrum):
         # FIXME: low cohesion
