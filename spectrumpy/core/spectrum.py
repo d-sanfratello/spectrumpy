@@ -3,17 +3,12 @@ import numpy as np
 import warnings
 
 from scipy.ndimage import median_filter
-from scipy.optimize import curve_fit
 
-from .core_abc_classes import SpectrumABC
-
-from spectrumpy.dataset import DataSet
-from spectrumpy.fit import FitStatus
+from spectrumpy.dataset import Dataset
 from spectrumpy import function_models as fs
-from spectrumpy.mhspectrasampler import MHsampler
 
 
-class Spectrum(SpectrumABC):
+class Spectrum:
     def __init__(self, int_spectrum, info):
         self.spectrum = int_spectrum
         self._info = info
@@ -80,18 +75,19 @@ class Spectrum(SpectrumABC):
         else:
             ax.set_xlabel(r'[px]')
 
-        dset = self.dataset
-        for lam in dset.lines:
-            if lam == dset.lines.min() \
-                    or lam == dset.lines.max():
-                ax.axvline(lam,
-                           ymin=0, ymax=1, linewidth=0.5, color='red',
-                           linestyle='dotted',
-                           label='calib limits')
-            else:
-                ax.axvline(lam,
-                           ymin=0, ymax=1, linewidth=0.5, color='navy',
-                           linestyle='dashed')
+        if calibration and self.calibration is not None:
+            dset = self.dataset
+            for lam in dset.lines:
+                if lam == dset.lines.min() \
+                        or lam == dset.lines.max():
+                    ax.axvline(lam,
+                               ymin=0, ymax=1, linewidth=0.5, color='red',
+                               linestyle='dotted',
+                               label='calib limits')
+                else:
+                    ax.axvline(lam,
+                               ymin=0, ymax=1, linewidth=0.5, color='navy',
+                               linestyle='dashed')
                 ax.text(lam, self.spectrum.max() / 2,
                         f'{dset.names[lam]}',
                         rotation=90, verticalalignment='center',
@@ -188,9 +184,13 @@ class Spectrum(SpectrumABC):
 
         return Spectrum(weighted, self.info)
 
-    def assign_dataset(self, *, lines, px, errpx, errlines, names):
-        dataset = DataSet(lines, px, errpx, errlines=errlines, names=names)
+    def assign_dataset(self, dataset=None, *,
+                       lines=None, px=None, errpx=None, errlines=None,
+                       names=None):
+        if dataset is None:
+            dataset = Dataset(lines, px, errpx, errlines=errlines, names=names)
 
+        self.dataset = dataset
         self._info['dataset'] = dataset
 
     def assign_calibration(self, calibration, units):

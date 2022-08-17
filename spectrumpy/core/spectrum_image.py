@@ -6,12 +6,10 @@ import warnings
 
 from cpnest import CPNest
 
-from .core_abc_classes import SpectrumImageABC
-
 from spectrumpy.bayes_inference import RotationPosterior
 
 
-class SpectrumImage(SpectrumImageABC):
+class SpectrumImage:
     def __init__(self, image, is_lamp, calibration):
         self.image = image
         self._info = {'original': np.copy(image),

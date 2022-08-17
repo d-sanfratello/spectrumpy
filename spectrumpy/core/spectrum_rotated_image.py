@@ -1,11 +1,9 @@
 import numpy as np
 
-from .core_abc_classes import SpectrumRotatedImageABC
-
 from .spectrum_image import SpectrumImage
 
 
-class SpectrumRotatedImage(SpectrumRotatedImageABC, SpectrumImage):
+class SpectrumRotatedImage(SpectrumImage):
     def __init__(self, image, angle, info):
         SpectrumImage.__init__(self, image,
                                info['lamp'], info['calibration'])
