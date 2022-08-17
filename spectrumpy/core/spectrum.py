@@ -78,16 +78,9 @@ class Spectrum:
         if calibration and self.calibration is not None:
             dset = self.dataset
             for lam in dset.lines:
-                if lam == dset.lines.min() \
-                        or lam == dset.lines.max():
-                    ax.axvline(lam,
-                               ymin=0, ymax=1, linewidth=0.5, color='red',
-                               linestyle='dotted',
-                               label='calib limits')
-                else:
-                    ax.axvline(lam,
-                               ymin=0, ymax=1, linewidth=0.5, color='navy',
-                               linestyle='dashed')
+                ax.axvline(lam,
+                           ymin=0, ymax=1, linewidth=0.5, color='navy',
+                           linestyle='dashed')
                 ax.text(lam, self.spectrum.max() / 2,
                         f'{dset.names[lam]}',
                         rotation=90, verticalalignment='center',
