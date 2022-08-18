@@ -98,6 +98,8 @@ class Linear(FunctionABC):
 
     @classmethod
     def func(cls, x, *args):
+        x = np.asarray(x)
+
         a, b = args
 
         return a * x + b
@@ -143,6 +145,8 @@ class Quadratic(FunctionABC):
 
     @classmethod
     def func(cls, x, *args):
+        x = np.asarray(x)
+
         a, b, c = args
 
         return a * x**2 + b * x + c
@@ -194,8 +198,10 @@ class Cubic(FunctionABC):
         return a * x ** 3 + b * x**2 + c * x + d
 
     @classmethod
-    def func(cls, x, *pars):
-        a, b, c, d = pars
+    def func(cls, x, *args):
+        x = np.asarray(x)
+
+        a, b, c, d = args
         return a * x ** 3 + b * x**2 + c * x + d
 
 
@@ -263,6 +269,8 @@ class Quartic(FunctionABC):
 
     @classmethod
     def func(cls, x, *args):
+        x = np.asarray(x)
+
         a, b, c, d, e = args
         return a * x**4 + b * x**3 + c * x**2 + d * x + e
 
