@@ -9,7 +9,8 @@ from pathlib import Path
 
 from spectrumpy.dataset import Dataset
 from spectrumpy.io import SpectrumPath
-from spectrumpy.bayes_inference import LinearPosterior
+from spectrumpy.bayes_inference import (LinearPosterior,
+                                        RotationPosterior)
 from spectrumpy.function_models import Linear
 
 cwd = Path(os.getcwd())
@@ -23,10 +24,11 @@ lamps_path = [l for l in sp_lamps_folder.glob(f'*{ext}')]
 names = [l.name.split(f'{ext}')[0] for l in lamps_path]
 lamps = {n: l for n, l in zip(names, lamps_path)}
 
-samples_folder = cwd.joinpath('exercise_data')
+exe_data = cwd.joinpath('exercise_data')
+samples_folder = exe_data.joinpath('1_hydrogen')
 rot_samples = samples_folder.joinpath('rot_samples.h5')
 rot_corr_samples = samples_folder.joinpath('rot_corr_samples.h5')
-calibration_samples = samples_folder.joinpath('calibration_samples.h5')
+calibration_samples = samples_folder.joinpath('hydr_calibration_samples.h5')
 
 find_angle = False
 find_angle_correction = False
@@ -45,32 +47,54 @@ if __name__ == "__main__":
         sx = [2, 2, 4, 4, 3, 2]
         y = [1821, 1727, 1571, 1369, 1309, 1280]
         sy = [2, 2, 3, 1, 1, 1]
-        # lower line
-        # x += [214, 723, 1392, 1593, 1686]
-        # y += [1095, 947, 756, 700, 674]
-        # sx += [4, 4, 3, 3, 2]
-        # sy += [4, 2, 2, 2, 1]
 
-        job, alpha = hydr.find_rotation_angle(
-            x, y, sy, sx,
-            bounds=[[-0.4, -0.1], [1778, 1880]],
+        x = np.array(x)
+        y = np.array(y)
+        sy = np.array(sy)
+        sx = np.array(sx)
+
+        rot_angle = RotationPosterior(x, y, sx, sy,
+                                      bounds=[[-0.4, -0.1],
+                                              [1778, 1880]])
+
+        job = CPNest(
+            rot_angle,
             verbose=1,
-            show=True,
-            save=True,
             nlive=1000,
-            name='./exercise_data/joint_rotation.pdf'
-            )
+            maxmcmc=1500,
+            nnest=4,
+            nensemble=4,
+            seed=1234,
+            output='./exercise_data/1_hydrogen/'
+        )
+
+        job.run()
 
         post = job.posterior_samples.ravel()
+        samples = np.column_stack([np.rad2deg(np.arctan(post['m'])),
+                                   post['q']])
+        fig = corner.corner(samples, labels=[r'$\alpha$', 'q'],
+                            quantiles=[.05, .95],
+                            filename='./exercise_data/joint_rotation.pdf',
+                            show_titles=True,
+                            title_fmt='.3e',
+                            title_kwargs={'fontsize': 8},
+                            label_kwargs={'fontsize': 8},
+                            use_math_text=True)
+
         l_pars = np.column_stack([post['m'], post['q']])
 
         with h5py.File(rot_samples, 'w') as hf:
             hf.create_dataset('line params', data=l_pars)
-            hf.create_dataset('alpha', data=np.asarray(alpha))
+            hf.create_dataset('alpha', data=np.asarray(samples))
     else:
         with h5py.File(rot_samples, 'r') as hf:
             l_pars = hf['line params'][:]
             alpha = hf['alpha'][:]
+
+    # as in corner.core.corner_impl function.
+    m_16, m_50, m_84 = corner.quantile(l_pars.T[0], [0.16, 0.5, 0.84])
+    m_m, m_p = m_50 - m_16, m_84 - m_50
 
     print(f"alpha = {alpha[0]:.3e} (+){alpha[2]:.3e} (-){alpha[1]:.3e}")
     alpha = alpha[0]
@@ -255,7 +279,8 @@ if __name__ == "__main__":
             maxmcmc=1500,
             nnest=4,
             nensemble=4,
-            seed=1234
+            seed=1234,
+            output='./exercise_data/1_hydrogen/'
         )
 
         job.run()
