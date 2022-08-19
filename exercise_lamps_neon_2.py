@@ -28,7 +28,11 @@ exe_data = cwd.joinpath('exercise_data')
 samples_folder = exe_data.joinpath('2_Neon')
 calibration_samples = samples_folder.joinpath('Ne_calib_samples.h5')
 
+show_corr_rotated_lamp = False
+show_cropped_lamp = False
+show_lamp_spectrum = False
 calibrate_lines = False
+show_calibration_fit = True
 
 if __name__ == "__main__":
     info = Spectrum.load_info(
@@ -40,7 +44,7 @@ if __name__ == "__main__":
     # Rotating image by known angle
     neon_rotated = neon.rotate_image(info['angle'])
     neon_rotated.show(figsize=figsize_sbs,
-                      show=False,
+                      show=show_corr_rotated_lamp,
                       save=True,
                       name='./exercise_data/2_Neon/rotated_neon.pdf',
                       title="Rotated neon lamp image")
@@ -48,19 +52,21 @@ if __name__ == "__main__":
     crops_y = info['crop_y']
     neon_cropped = neon_rotated.crop_image(crop_y=crops_y)
     neon_cropped.show(figsize=figsize_sbs,
-                      show=False,
+                      show=show_cropped_lamp,
                       save=True,
                       name='./exercise_data/2_Neon/cropped_neon.pdf',
                       title="Cropped neon lamp image")
 
     sp = neon_cropped.run_integration()
-    sp.show(show=True,
-            save=False,
+    sp.show(show=show_lamp_spectrum,
+            save=True,
             name='./exercise_data/2_Neon/calibrated_Ne-I.pdf',
             legend=False,
             calibration=True,
             title='Calibrated Ne-I spectrum',
-            overlay_pixel=True, inverted_overlay=True)
+            overlay_pixel=True, inverted_overlay=True,
+            # overlay_spectrum=info['uncalib spectrum']
+            )
 
     # Calibration lines - Hydrogen
     px_prev = px = [1041, 1736, 1945, 2040]
@@ -69,8 +75,8 @@ if __name__ == "__main__":
     s_lam_prev = [3e-3, 5e-3, 6e-4, 6e-4]
     names_prev = [r'H-$\alpha$', r'H-$\beta$', r'H-$\gamma$', r'H-$\delta$']
     # Calibration lines
-    px = [584.0, 639.3, 695.0, 706.1]  # nm
-    s_px = [1.5, 3.8, 1.2, 1.7]
+    px = [1336, 1112, 885, 840]
+    s_px = [3, 8, 3, 4]
     lam = [585.24878, 640.22480, 692.94672, 703.24128]  # nm
     s_lam = [5e-5, 10e-5, 4e-5, 4e-5]
     names = [r'Ne-I', r'Ne-I', r'Ne-I', r'Ne-I']
@@ -87,18 +93,18 @@ if __name__ == "__main__":
                       names=names)
 
     if calibrate_lines:
-        bounds = [[-10, 10], [-2, 5], [-20, 20]]
+        bounds = [[-1, 1], [-1, 0], [850, 920]]
         quadratic_posterior = QuadraticPosterior(px, lam, s_px, s_lam, bounds)
 
         job = CPNest(
             quadratic_posterior,
             verbose=1,
-            nlive=1000,
+            nlive=2000,
             maxmcmc=1500,
             nnest=4,
             nensemble=4,
             seed=1234,
-            output='./exercise_data/2_Neon/'
+            output='./exercise_data/2_Neon/line_calibration'
         )
 
         job.run()
@@ -109,7 +115,7 @@ if __name__ == "__main__":
         with h5py.File(calibration_samples, 'w') as hf:
             hf.create_dataset('params', data=samples)
 
-        fig = corner.corner(samples, labels=['a', 'b' 'c'],
+        fig = corner.corner(samples, labels=['a', 'b', 'c'],
                             quantiles=[.05, .95],
                             filename='Ne_calibration.pdf',
                             show_titles=True,
@@ -139,7 +145,7 @@ if __name__ == "__main__":
     print(f"c = {c_50:.3e} (+){c_p:.3e} (-){c_m:.3e}")
 
     # Plot calibration
-    asc = np.linspace(400, 710, 1000)
+    asc = np.linspace(800, 2100, 1000)
     models = [
         Quadratic.func(asc, s[0], s[1], s[2]) for s in samples
     ]
@@ -149,26 +155,33 @@ if __name__ == "__main__":
                             x=asc,
                             title="Spectrum calibration",
                             units='nm',
-                            xlim=[400, 710],
+                            xlim=[800, 2100],
                             ylim=[400, 710],
-                            show=True,
-                            save=False,
+                            show=show_calibration_fit,
+                            save=True,
                             name='./exercise_data/2_Neon/'
                                  'Ne_calibration_fit.pdf',
                             legend=False)
 
     # Save calibration
-    # dataset = Dataset(lines=lam, errlines=s_lam,
-    #                   px=px, errpx=s_px,
-    #                   names=[r'H-$\alpha$', r'H-$\beta$', r'H-$\gamma$',
-    #                          r'H-$\delta$'])
-    # sp.assign_dataset(dataset)
-    # sp.assign_calibration(Linear(m_50, q_50), units='nm')
+    sp.assign_dataset(dataset)
+    sp.assign_calibration(Quadratic(a_50, b_50, c_50), units='nm')
 
-    # sp.show(show=True, save=False,
-    #         name='./exercise_data/2_Neon/calibrated_H-I.pdf',
-    #         legend=False,
-    #         calibration=True,
-    #         title='Calibrated H-I spectrum')
+    sp.show(show=True,
+            save=True,
+            name='./exercise_data/2_Neon/calibrated_Ne-I_H-I.pdf',
+            legend=False,
+            calibration=True,
+            title='Calibrated Ne-I with H-I spectrum',
+            overlay_pixel=True, inverted_overlay=True,
+            overlay_spectrum=info['uncalib spectrum']
+            )
 
-    # sp.save_info(filename='./exercise_data/2_Neon/neon_calibration.json')
+    sp.show(show=True,
+            save=True,
+            name='./exercise_data/2_Neon/calibrated_Ne-I.pdf',
+            legend=False,
+            calibration=True,
+            title='Calibrated Ne-I spectrum')
+
+    sp.save_info(filename='./exercise_data/2_Neon/neon_calibration.json')
