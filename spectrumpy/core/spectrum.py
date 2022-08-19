@@ -27,6 +27,8 @@ class Spectrum:
              show=False, save=True, name='./spectrum_show.pdf',
              legend=False,
              calibration=True,
+             overlay_pixel=False,
+             overlay_spectrum=None,
              *args, **kwargs):
         # FIXME: low cohesion? try splitting in a part only with spectrum
         #  and another only with calibration.
@@ -73,6 +75,11 @@ class Spectrum:
 
         if 'xlim' in kwargs.keys():
             ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
+        elif calibration and self.calibration is not None:
+            ax.set_xlim(x_clb.min(), x_clb.max())
+        else:
+            ax.set_xlim(0, len(self.spectrum)-1)
+
         if 'ylim' in kwargs.keys():
             ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
 
@@ -92,6 +99,30 @@ class Spectrum:
                         rotation=90, verticalalignment='center',
                         horizontalalignment='left',
                         size=7.5, color='navy')
+
+        if overlay_pixel and calibration and self.calibration is not None:
+            fig.subplots_adjust(bottom=0.2)
+            ax2 = ax.twiny()
+
+            if overlay_spectrum is not None:
+                ax2.plot(overlay_spectrum.spectrum,
+                         linestyle='solid', color='orange', linewidth=0.5)
+
+            ax2.set_xlim(0, len(self.spectrum)-1)
+            ax.set_xlim(x_clb.min(), x_clb.max())
+
+            ax2.set_xlabel(r'[px]')
+
+            ax2.spines["bottom"].set_position(("axes", -0.15))
+            ax2.spines["bottom"].set_edgecolor('orange')
+
+            ax2.xaxis.label.set_color('orange')
+            ax2.xaxis.set_label_position("bottom")
+
+            ax2.tick_params(axis='x', colors='orange')
+            ax2.xaxis.set_ticks_position("bottom")
+
+            ax2.set_visible(True)
 
         if legend:
             ax.legend(loc='best')
