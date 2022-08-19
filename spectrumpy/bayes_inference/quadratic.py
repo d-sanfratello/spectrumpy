@@ -30,9 +30,6 @@ class QuadraticPosterior(model.Model):
             self.names.append(f'x_{idx}')
 
     def log_likelihood(self, param):
-        # a = param['a']
-        # b = param['b']
-        # c = param['c']
         for par in param.names:
             exec(f"{par} = {param[par]}")
 
