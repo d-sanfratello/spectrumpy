@@ -22,6 +22,8 @@ class Spectrum:
         if 'calibration' in self.info.keys():
             self.calibration = self.info['calibration']
 
+        self._info['uncalib spectrum'] = np.copy(self.spectrum)
+
     def show(self,
              model=None, x=None,
              show=False, save=True, name='./spectrum_show.pdf',
@@ -106,8 +108,8 @@ class Spectrum:
             ax2 = ax.twiny()
 
             if overlay_spectrum is not None:
-                ax2.plot(overlay_spectrum.spectrum,
-                         linestyle='solid', color='orange', linewidth=0.5)
+                ax.plot(x_clb, overlay_spectrum,
+                        linestyle='solid', color='orange', linewidth=0.5)
 
             if inverted_overlay:
                 ax2.set_xlim(len(self.spectrum) - 1, 0)
@@ -118,12 +120,12 @@ class Spectrum:
             ax2.set_xlabel(r'[px]')
 
             ax2.spines["bottom"].set_position(("axes", -0.15))
-            ax2.spines["bottom"].set_edgecolor('orange')
+            ax2.spines["bottom"].set_edgecolor('blue')
 
-            ax2.xaxis.label.set_color('orange')
+            ax2.xaxis.label.set_color('blue')
             ax2.xaxis.set_label_position("bottom")
 
-            ax2.tick_params(axis='x', colors='orange')
+            ax2.tick_params(axis='x', colors='blue')
             ax2.xaxis.set_ticks_position("bottom")
 
             ax2.set_visible(True)
@@ -252,6 +254,8 @@ class Spectrum:
                 value = value.tolist()
             dict_[key] = value
 
+        dict_['uncalib spectrum'] = dict_['uncalib spectrum'].tolist()
+
         crop_x = dict_.pop('crop_x')
         crop_y = dict_.pop('crop_y')
 
@@ -293,10 +297,14 @@ class Spectrum:
         crop_x = dict_.pop('crop_x')
         crop_y = dict_.pop('crop_y')
 
+        uncalib_spectrum = dict_.pop('uncalib spectrum')
+
         info_dict = dict_.copy()
 
         info_dict['crop_x'] = slice(*crop_x)
         info_dict['crop_y'] = slice(*crop_y)
+
+        info_dict['uncalib spectrum'] = np.array(uncalib_spectrum)
 
         f_gen = fs.FunctionGenerator(order=order, pars=pars)
         info_dict['calibration'] = f_gen.assign()
