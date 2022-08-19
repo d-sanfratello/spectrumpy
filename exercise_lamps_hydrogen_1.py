@@ -31,10 +31,17 @@ rot_corr_samples = samples_folder.joinpath('rot_corr_samples.h5')
 calibration_samples = samples_folder.joinpath('hydr_calibration_samples.h5')
 
 find_angle = False
+show_fitted_lamp = False
+show_rotated_lamp = False
+show_slices = False
 find_angle_correction = False
+show_corr_rotated_lamp = False
 check_alignment = False
+show_cropped_lamp = False
 show_top_and_bottom = False
+show_lamp_spectrum = False
 calibrate_lines = False
+show_calibration_fit = True
 
 
 if __name__ == "__main__":
@@ -65,7 +72,7 @@ if __name__ == "__main__":
             nnest=4,
             nensemble=4,
             seed=1234,
-            output='./exercise_data/1_hydrogen/'
+            output='./exercise_data/1_hydrogen/angle_rotation'
         )
 
         job.run()
@@ -73,12 +80,15 @@ if __name__ == "__main__":
         post = job.posterior_samples.ravel()
         samples = np.column_stack([np.rad2deg(np.arctan(post['m'])),
                                    post['q']])
+        a_16, a_50, a_84 = corner.quantile(samples.T[0], [0.16, 0.5, 0.84])
+        a_m, a_p = a_50 - a_16, a_84 - a_50
+        alpha = (a_50, a_m, a_p)
 
         l_pars = np.column_stack([post['m'], post['q']])
 
         with h5py.File(rot_samples, 'w') as hf:
             hf.create_dataset('line params', data=l_pars)
-            hf.create_dataset('alpha', data=np.asarray(samples))
+            hf.create_dataset('alpha', data=np.asarray(alpha))
 
         fig = corner.corner(samples, labels=[r'$\alpha$', 'q'],
                             quantiles=[.05, .95],
@@ -98,10 +108,6 @@ if __name__ == "__main__":
             l_pars = hf['line params'][:]
             alpha = hf['alpha'][:]
 
-    # as in corner.core.corner_impl function.
-    m_16, m_50, m_84 = corner.quantile(l_pars.T[0], [0.16, 0.5, 0.84])
-    m_m, m_p = m_50 - m_16, m_84 - m_50
-
     print(f"alpha = {alpha[0]:.3e} (+){alpha[2]:.3e} (-){alpha[1]:.3e}")
     alpha = alpha[0]
 
@@ -113,7 +119,7 @@ if __name__ == "__main__":
     hydr.show(figsize=figsize_sbs,
               model=models,
               x=x,
-              show=False,
+              show=show_fitted_lamp,
               save=True,
               name='./exercise_data/1_hydrogen/image_hydr.pdf',
               title="Hydrogen lamp image")
@@ -121,7 +127,7 @@ if __name__ == "__main__":
     # Rotating image by alpha
     hydr_rotated = hydr.rotate_image(alpha)
     hydr_rotated.show(figsize=figsize_sbs,
-                      show=False,
+                      show=show_rotated_lamp,
                       save=True,
                       name='./exercise_data/1_hydrogen/rotated_hydr.pdf',
                       title="Rotated hydrogen lamp image")
@@ -154,7 +160,7 @@ if __name__ == "__main__":
                    model=models,
                    x=np.linspace(0, x_sup, x_len),
                    legend=True,
-                   show=False,
+                   show=show_slices,
                    save=True,
                    name='./exercise_data/1_hydrogen/hydr_align_slices.pdf',
                    title="Slices of rotated hydrogen spectrum image")
@@ -182,14 +188,19 @@ if __name__ == "__main__":
             nnest=4,
             nensemble=4,
             seed=1234,
-            output='./exercise_data/1_hydrogen/joint_rotation_correction.pdf'
+            output='./exercise_data/1_hydrogen/angle_correction/'
         )
 
         job.run()
 
         post = job.posterior_samples.ravel()
-        alpha_corr = np.column_stack([np.rad2deg(np.arctan(post['m'])),
+        samples = np.column_stack([np.rad2deg(np.arctan(post['m'])),
                                       post['q']])
+
+        a_16, a_50, a_84 = corner.quantile(samples.T[0], [0.16, 0.5, 0.84])
+        a_m, a_p = a_50 - a_16, a_84 - a_50
+        alpha_corr = (a_50, a_m, a_p)
+
         l_pars = np.column_stack([post['m'], post['q']])
 
         with h5py.File(rot_corr_samples, 'w') as hf:
@@ -197,7 +208,7 @@ if __name__ == "__main__":
             hf.create_dataset('alpha_corr',
                               data=np.asarray(alpha_corr))
 
-        fig = corner.corner(alpha_corr, labels=[r'$\alpha$', 'q'],
+        fig = corner.corner(samples, labels=[r'$\alpha$', 'q'],
                             quantiles=[.05, .95],
                             filename='./exercise_data/1_hydrogen/'
                                      'joint_rotation_correction_alpha.pdf',
@@ -223,13 +234,13 @@ if __name__ == "__main__":
     # Rotating image by alphacorr
     hydr_rotated = hydr.rotate_image(alpha-alpha_corr)
     hydr_rotated.show(figsize=figsize_sbs,
-                      show=False,
+                      show=show_corr_rotated_lamp,
                       save=True,
                       name='./exercise_data/1_hydrogen/corr_rotated_hydr.pdf',
                       title="Rotated hydrogen lamp image")
 
     if check_alignment:
-        slices = [1130, 1230, 1330, 1430, 1530, 1630, 1730]
+        slices = [1130, 1230, 1330, 1400, 1430, 1480, 1530, 1630, 1730]
         mid_line = 1430
         hydr_corr_slices = {
             line: hydr_rotated.slice_image(line) for line in slices
@@ -255,15 +266,15 @@ if __name__ == "__main__":
                        model=models,
                        x=np.linspace(0, x_sup, x_len),
                        legend=True,
-                       show=False,
+                       show=True,
                        save=True,
                        title="Slices of rotated hydrogen spectrum image"
                              " with correction")
 
-    crops_y = [1330, 1530]
+    crops_y = [1400, 1480]
     hydr_cropped = hydr_rotated.crop_image(crop_y=crops_y)
     hydr_cropped.show(figsize=figsize_sbs,
-                      show=False,
+                      show=show_cropped_lamp,
                       save=True,
                       name='./exercise_data/1_hydrogen/cropped_hydr.pdf',
                       title="Cropped hydrogen lamp image")
@@ -284,7 +295,7 @@ if __name__ == "__main__":
                        x=np.linspace(0,
                                      len(sp_ref_dw.spectrum) - 1,
                                      len(sp_ref_dw.spectrum)),
-                       show=False,
+                       show=True,
                        save=True,
                        name='./exercise_data/1_hydrogen/'
                             'hydr_spectrum_slices.pdf',
@@ -292,14 +303,14 @@ if __name__ == "__main__":
 
     sp = hydr_cropped.run_integration()
     sp.show(figsize=figsize_sbs,
-            show=False,
+            show=show_lamp_spectrum,
             save=True,
             name='./exercise_data/1_hydrogen/int_spectrum_hydr.pdf',
             title="Hydrogen lamp spectrum")
 
     # Calibration lines
-    px = [1041, 1737, 1945, 2041]
-    s_px = [4, 3, 3, 3]
+    px = [1041, 1736, 1945, 2040]
+    s_px = [5, 3, 3, 3]
     lam = [656.279, 486.135, 434.0472, 410.1734]  # nm
     s_lam = [3e-3, 5e-3, 6e-4, 6e-4]
 
@@ -316,7 +327,7 @@ if __name__ == "__main__":
             nnest=4,
             nensemble=4,
             seed=1234,
-            output='./exercise_data/1_hydrogen/'
+            output='./exercise_data/1_hydrogen/line_calibration/'
         )
 
         job.run()
@@ -365,7 +376,8 @@ if __name__ == "__main__":
                             units='nm',
                             xlim=[1000, 2100],
                             ylim=[400, 700],
-                            show=False, save=True,
+                            show=show_calibration_fit,
+                            save=True,
                             name='./exercise_data/1_hydrogen/'
                                  'calibration_fit.pdf',
                             legend=False)
@@ -378,7 +390,8 @@ if __name__ == "__main__":
     sp.assign_dataset(dataset)
     sp.assign_calibration(Linear(m_50, q_50), units='nm')
 
-    sp.show(show=True, save=True,
+    sp.show(show=True,
+            save=True,
             name='./exercise_data/1_hydrogen/calibrated_H-I.pdf',
             legend=False,
             calibration=True,
