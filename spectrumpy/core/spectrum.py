@@ -29,6 +29,7 @@ class Spectrum:
              calibration=True,
              overlay_pixel=False,
              overlay_spectrum=None,
+             inverted_overlay=False,
              *args, **kwargs):
         # FIXME: low cohesion? try splitting in a part only with spectrum
         #  and another only with calibration.
@@ -108,7 +109,10 @@ class Spectrum:
                 ax2.plot(overlay_spectrum.spectrum,
                          linestyle='solid', color='orange', linewidth=0.5)
 
-            ax2.set_xlim(0, len(self.spectrum)-1)
+            if inverted_overlay:
+                ax2.set_xlim(len(self.spectrum) - 1, 0)
+            else:
+                ax2.set_xlim(0, len(self.spectrum)-1)
             ax.set_xlim(x_clb.min(), x_clb.max())
 
             ax2.set_xlabel(r'[px]')
