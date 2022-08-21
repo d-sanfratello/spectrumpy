@@ -31,15 +31,15 @@ rot_corr_samples = samples_folder.joinpath('rot_corr_samples.h5')
 calibration_samples = samples_folder.joinpath('hydr_calibration_samples.h5')
 
 find_angle = False
-show_fitted_lamp = False
-show_rotated_lamp = False
-show_slices = False
+show_fitted_lamp = True
+show_rotated_lamp = True
+show_slices = True
 find_angle_correction = False
-show_corr_rotated_lamp = False
-check_alignment = False
-show_cropped_lamp = False
+show_corr_rotated_lamp = True
+check_alignment = True
+show_cropped_lamp = True
 show_top_and_bottom = False
-show_lamp_spectrum = False
+show_lamp_spectrum = True
 calibrate_lines = False
 show_calibration_fit = True
 
@@ -122,7 +122,8 @@ if __name__ == "__main__":
               show=show_fitted_lamp,
               save=True,
               name='./exercise_data/1_hydrogen/image_hydr.pdf',
-              title="Hydrogen lamp image")
+              # title="Hydrogen lamp image"
+              )
 
     # Rotating image by alpha
     hydr_rotated = hydr.rotate_image(alpha)
@@ -130,7 +131,8 @@ if __name__ == "__main__":
                       show=show_rotated_lamp,
                       save=True,
                       name='./exercise_data/1_hydrogen/rotated_hydr.pdf',
-                      title="Rotated hydrogen lamp image")
+                      # title="Rotated hydrogen lamp image"
+                      )
 
     # Checking if there are still residual effects taking three slices
     # at the top, middle and bottom of the spectrum.
@@ -163,7 +165,8 @@ if __name__ == "__main__":
                    show=show_slices,
                    save=True,
                    name='./exercise_data/1_hydrogen/hydr_align_slices.pdf',
-                   title="Slices of rotated hydrogen spectrum image")
+                   # title="Slices of rotated hydrogen spectrum image"
+                   )
 
     if find_angle_correction:
         y = [1744, 1745, 1746, 1747, 1750, 1752, 1754]
@@ -237,7 +240,8 @@ if __name__ == "__main__":
                       show=show_corr_rotated_lamp,
                       save=True,
                       name='./exercise_data/1_hydrogen/corr_rotated_hydr.pdf',
-                      title="Rotated hydrogen lamp image")
+                      # title="Rotated hydrogen lamp image"
+                      )
 
     if check_alignment:
         slices = [1130, 1230, 1330, 1400, 1430, 1480, 1530, 1630, 1730]
@@ -268,8 +272,9 @@ if __name__ == "__main__":
                        legend=True,
                        show=True,
                        save=True,
-                       title="Slices of rotated hydrogen spectrum image"
-                             " with correction")
+                       # title="Slices of rotated hydrogen spectrum image"
+                       #       " with correction"
+                       )
 
     crops_y = [1400, 1480]
     hydr_cropped = hydr_rotated.crop_image(crop_y=crops_y)
@@ -277,7 +282,8 @@ if __name__ == "__main__":
                       show=show_cropped_lamp,
                       save=True,
                       name='./exercise_data/1_hydrogen/cropped_hydr.pdf',
-                      title="Cropped hydrogen lamp image")
+                      # title="Cropped hydrogen lamp image"
+                      )
 
     if show_top_and_bottom:
         ylims = hydr_cropped.image.shape[0]
@@ -299,14 +305,16 @@ if __name__ == "__main__":
                        save=True,
                        name='./exercise_data/1_hydrogen/'
                             'hydr_spectrum_slices.pdf',
-                       title="Slices of cropped hydrogen spectrum image")
+                       # title="Slices of cropped hydrogen spectrum image"
+                       )
 
     sp = hydr_cropped.run_integration()
     sp.show(figsize=figsize_sbs,
             show=show_lamp_spectrum,
             save=True,
             name='./exercise_data/1_hydrogen/int_spectrum_hydr.pdf',
-            title="Hydrogen lamp spectrum")
+            # title="Hydrogen lamp spectrum"
+            )
 
     # Calibration lines
     px = [1041, 1736, 1945, 2040]
@@ -372,7 +380,7 @@ if __name__ == "__main__":
     sp.show_calibration_fit(px, lam, s_px, s_lam=s_lam,
                             model=models,
                             x=x,
-                            title="Spectrum calibration",
+                            # title="Spectrum calibration",
                             units='nm',
                             xlim=[1000, 2100],
                             ylim=[400, 700],
@@ -395,7 +403,7 @@ if __name__ == "__main__":
             name='./exercise_data/1_hydrogen/calibrated_H-I.pdf',
             legend=False,
             calibration=True,
-            title='Calibrated H-I spectrum'
+            # title='Calibrated H-I spectrum'
             )
 
     sp.save_info(filename='./exercise_data/1_hydrogen/hydr_calibration.json')
