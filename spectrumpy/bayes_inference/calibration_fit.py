@@ -52,6 +52,7 @@ class CalibrationFit(Model):
 
         return likel
 
+
 if __name__ == "__main__":
     parser = op.OptionParser()
     parser.add_option("-i", "--input", type="string", dest="data_file",
