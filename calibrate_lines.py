@@ -73,13 +73,10 @@ if __name__ == "__main__":
                 Path(options.out_folder).joinpath(
                     options.model, 'cpnest.h5'), 'r'
         ) as f:
-            post = np.array([
-                np.array([x for x in p])
-                for p in f['combined']['posterior_samples']
-            ]).T
+            post = np.asarray(f['combined']['posterior_samples'])
 
-    post = post[len(l):len(l) + len(mod.names[options.model])].T
-    samples = np.column_stack((post['x_0'], post['x_1']))
+    columns = [post[par] for par in mod.names[options.model]]
+    samples = np.column_stack(columns)
 
     if options.data_file is not None:
         c = corner.corner(
@@ -103,11 +100,19 @@ if __name__ == "__main__":
         bbox_inches='tight'
     )
 
-    if options.postprocess and options.density:
+    if options.density:
         d_bounds = [
             [samples[:, _].min(), samples[:, _].max()]
-            for _ in range(samples.shape[0])
+            for _ in range(samples.shape[1])
         ]
+        del_idx = []
+        for idx in range(samples.shape[1]):
+            del_idx.append(np.argmin(samples[:, idx]))
+            del_idx.append(np.argmax(samples[:, idx]))
+        del_idx_ = []
+        [del_idx_.append(x) for x in del_idx if x not in del_idx_]
+
+        samples = np.delete(samples, del_idx_, axis=0)
         prior = get_priors(d_bounds, samples)
 
         mix = DPGMM(bounds=d_bounds, prior_pars=prior)
