@@ -19,17 +19,33 @@ from spectrumpy.bayes_inference import models as mod
 if __name__ == "__main__":
     parser = op.OptionParser()
     parser.add_option("-i", "--input", type="string", dest="data_file",
-                      default=None)
-    parser.add_option("-m", "--model", type="string", dest="model")
-    parser.add_option("-b", "--bounds", type="string", dest="bounds")
-    parser.add_option("-B", "--model-bounds", type="string", dest="mod_bounds")
-    parser.add_option("-p", "--postprocess", action='store_true',
-                      dest="postprocess", default=False)
+                      default=None,
+                      help="The file to input the calibration lines from. If "
+                           "none is provided the dataset is simulated.")
     parser.add_option("-o", "--output-folder", dest="out_folder",
-                      default=Path(os.getcwd()))
+                      default=Path(os.getcwd()),
+                      help="The folder where to save the output of this "
+                           "command.")
+    parser.add_option("-p", "--postprocess", action='store_true',
+                      dest="postprocess", default=False,
+                      help="Whether to do a new inference or to open a file "
+                           "of samples.")
+    parser.add_option("-m", "--model", type="string", dest="model",
+                      help="The type of model to do inference on.")
+    parser.add_option("-b", "--bounds", type="string", dest="bounds",
+                      help="The bounds for the pixels.")
+    parser.add_option("-B", "--model-bounds", type="string",
+                      dest="mod_bounds",
+                      help="The bounds for the model parameters. Write from "
+                           "highest to lowest order.")
+    parser.add_option("-P", "--prior", dest="prior_density", default=None,
+                      help="The path to a 'figaro'-compatible .json file "
+                           "containing a pdf posterior from another sample "
+                           "to use as a prior on a following calibration.")
     parser.add_option("-d", "--save-density", action='store_true',
-                      dest="density", default=False)
-    parser.add_option("-P", "--prior", dest="prior_density", default=None)
+                      dest="density", default=False,
+                      help="Whether to run 'figaro' to create an analytic "
+                           "pdf and store it in a .json file.")
     (options, args) = parser.parse_args()
 
     bounds = eval(options.bounds)
