@@ -46,6 +46,8 @@ if __name__ == "__main__":
                       dest="density", default=False,
                       help="Whether to run 'figaro' to create an analytic "
                            "pdf and store it in a .json file.")
+    parser.add_option("-t", "--show-title", action='store_true',
+                      dest="show_title", default=False)
     (options, args) = parser.parse_args()
 
     bounds = eval(options.bounds)
@@ -96,18 +98,31 @@ if __name__ == "__main__":
     columns = [post[par] for par in mod.names[options.model]]
     samples = np.column_stack(columns)
 
+    fig = plt.figure()
+
     title = 'Model: $f(p) = '
+    labels = []
     for par in mod.names[options.model]:
         deg = par[-1]
+
+        if deg == '0':
+            units = '[$nm$]'
+        elif deg == '1':
+            units = f'[$nm / px$]'
+        else:
+            units = f'[$nm / px^{deg}$]'
+        labels.append(f'${par}$ {units}')
+
         title += rf'{par}\,p^{deg} + '
     title = title[:-3] + '$'
 
-    fig = plt.figure()
-    fig.suptitle(title)
+    if options.show_title:
+        fig.suptitle(title)
+
     if options.data_file is not None:
         c = corner.corner(
             samples,
-            labels=[f'${l}$' for l in mod.names[options.model]],
+            labels=labels,
             quantiles=[0.16, 0.5, 0.84],
             fig=fig,
             use_math_text=True,
@@ -115,7 +130,7 @@ if __name__ == "__main__":
     else:
         c = corner.corner(
             samples,
-            labels=[f'${l}$' for l in mod.names[options.model]],
+            labels=labels,
             quantiles=[0.16, 0.5, 0.84],
             truths=true_vals,
             fig=fig,
