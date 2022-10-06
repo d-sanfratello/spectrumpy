@@ -1,10 +1,12 @@
 import corner
 import cpnest
 import h5py
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import optparse as op
 
+from corner import quantile
 from figaro.mixture import DPGMM
 from figaro.load import save_density, load_density
 from figaro.utils import get_priors
@@ -78,18 +80,30 @@ if __name__ == "__main__":
     columns = [post[par] for par in mod.names[options.model]]
     samples = np.column_stack(columns)
 
+    title = 'Model: $f(p) = '
+    for par in mod.names[options.model]:
+        deg = par[-1]
+        title += rf'{par}\,p^{deg} + '
+    title = title[:-3] + '$'
+
+    fig = plt.figure()
+    fig.suptitle(title)
     if options.data_file is not None:
         c = corner.corner(
             samples,
-            labels=['${0}$'.format(l) for l in mod.names[options.model]],
-            quantiles=[0.16, 0.5, 0.84]
+            labels=[f'${l}$' for l in mod.names[options.model]],
+            quantiles=[0.16, 0.5, 0.84],
+            fig=fig,
+            use_math_text=True,
         )
     else:
         c = corner.corner(
             samples,
-            labels=['${0}$'.format(l) for l in mod.names[options.model]],
+            labels=[f'${l}$' for l in mod.names[options.model]],
             quantiles=[0.16, 0.5, 0.84],
-            truths=true_vals
+            truths=true_vals,
+            fig=fig,
+            use_math_text=True,
         )
 
     c.savefig(
@@ -99,6 +113,15 @@ if __name__ == "__main__":
         ),
         bbox_inches='tight'
     )
+    with open(Path(options.out_folder).joinpath(
+            options.model,
+            f'quantiles_{options.model}.txt'), 'w+') as f:
+        for _, l in enumerate(mod.names[options.model]):
+            x = samples[:, _]
+            q_16, q_50, q_84 = quantile(x, [0.16, 0.5, 0.84])
+            q_m, q_p = q_50 - q_16, q_84 - q_50
+
+            f.write(f'{l} =\t{q_50} +{q_p} -{q_m}\n')
 
     if options.density:
         d_bounds = [
@@ -120,4 +143,4 @@ if __name__ == "__main__":
 
         save_density(density,
                      folder=Path(options.out_folder).joinpath(options.model),
-                     name=f'params_posterior_density_{options.model}.json')
+                     name=f'params_posterior_density_{options.model}')
