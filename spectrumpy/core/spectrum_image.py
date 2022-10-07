@@ -6,7 +6,7 @@ import warnings
 
 from cpnest import CPNest
 
-from spectrumpy.bayes_inference import RotationPosterior
+# from spectrumpy.bayes_inference import RotationPosterior
 
 
 class SpectrumImage:
@@ -43,9 +43,12 @@ class SpectrumImage:
             ax.set_title(kwargs['title'])
 
         if log:
-            ax.imshow(np.log10(self.image), origin='lower')
+            plot_image = np.log10(self.image)
         else:
-            ax.imshow(self.image, origin='lower')
+            plot_image = self.image
+        ax.imshow(plot_image,
+                  origin='lower',
+                  cmap='Greys')
 
         if model is not None:
             if hasattr(model, '__iter__') \
