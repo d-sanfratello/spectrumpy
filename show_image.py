@@ -1,7 +1,6 @@
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import optparse as op
 
 from pathlib import Path
@@ -19,6 +18,8 @@ if __name__ == "__main__":
     parser.add_option("-I", "--image", type='int', dest='image',
                       default=0,
                       help="")
+    parser.add_option("-o", "--output", type='string', dest='output_image',
+                      default=None)
 
     (options, args) = parser.parse_args()
 
@@ -28,9 +29,41 @@ if __name__ == "__main__":
         )
 
     try:
-        image_file = SpectrumPath(options.image_file, is_lamp=options.is_lamp)
-        image = image_file.images[options.image]
-    except FileNotFoundError:
-        # try:
-        # FIXME: need to try to open a fits and then an h5.
-        pass
+        image_file = SpectrumPath(Path(options.image_file),
+                                  is_lamp=options.is_lamp)
+        image = image_file.images[str(options.image)]
+
+        image.show(
+            log=True,
+            show=True,
+            save=False,
+            legend=False
+        )
+
+        if options.output_image is not None:
+            path = options.output_image
+
+            if path.find(".h5") < 0:
+                path += '.h5'
+            path = Path(path)
+
+            with h5py.File(path, 'w') as f:
+                f.create_dataset('image', data=image.image)
+    except OSError:
+        try:
+            with h5py.File(Path(options.image_file), 'r') as f:
+                image = np.asarray(f['image'])
+
+            fig = plt.figure()
+            ax = fig.gca()
+
+            ax.imshow(np.log10(image),
+                      origin='lower',
+                      cmap='Greys')
+
+            ax.set_xlabel('[px]')
+            ax.set_ylabel('[px]')
+
+            plt.show()
+        finally:
+            pass
