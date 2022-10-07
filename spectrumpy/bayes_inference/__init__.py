@@ -1,5 +1,2 @@
-# from .linear import LinearPosterior
-# from .quadratic import QuadraticPosterior
-# from .rotation import RotationPosterior
-
-from .models import *
+from .calibration_fit import CalibrationFit
+from .rotation_fit import RotationFit
