@@ -10,6 +10,8 @@ from pathlib import Path
 
 from spectrumpy.bayes_inference import RotationFit
 
+# FIXME: Test
+
 
 if __name__ == "__main__":
     parser = op.OptionParser()

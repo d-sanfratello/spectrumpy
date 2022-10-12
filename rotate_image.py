@@ -7,6 +7,8 @@ from pathlib import Path
 from spectrumpy.io import SpectrumPath
 from spectrumpy.core import SpectrumImage
 
+# FIXME: test me
+
 
 if __name__ == "__main__":
     parser = op.OptionParser()
