@@ -5,6 +5,7 @@ import optparse as op
 
 from pathlib import Path
 
+from spectrumpy.core import SpectrumImage
 from spectrumpy.io import SpectrumPath
 
 
@@ -40,15 +41,8 @@ if __name__ == "__main__":
 
     try:
         image_file = SpectrumPath(Path(options.image_file),
-                                  is_lamp=options.is_lamp)
+                                  is_lamp=False)
         image = image_file.images[str(options.image)]
-
-        image.show(
-            log=True,
-            show=True,
-            save=False,
-            legend=False
-        )
 
         if options.output_image is not None:
             path = options.output_image
@@ -60,20 +54,10 @@ if __name__ == "__main__":
             with h5py.File(path, 'w') as f:
                 f.create_dataset('image', data=image.image)
     except OSError:
-        try:
-            with h5py.File(Path(options.image_file), 'r') as f:
-                image = np.asarray(f['image'])
+        with h5py.File(Path(options.image_file), 'r') as f:
+            image = np.asarray(f['image'])
 
-            fig = plt.figure()
-            ax = fig.gca()
-
-            ax.imshow(np.log10(image),
-                      origin='lower',
-                      cmap='Greys')
-
-            ax.set_xlabel('[px]')
-            ax.set_ylabel('[px]')
-
-            plt.show()
-        finally:
-            pass
+        image = SpectrumImage(image, is_lamp=False)
+    finally:
+        # FIXME: Add slicing and slicing show to image
+        pass
