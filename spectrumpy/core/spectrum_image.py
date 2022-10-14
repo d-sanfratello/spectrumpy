@@ -4,6 +4,8 @@ import numpy as np
 import scipy.ndimage
 import warnings
 
+from spectrumpy.core.spectrum import Spectrum
+
 
 class SpectrumImage:
     def __init__(self, image, is_lamp, info=None):
@@ -114,6 +116,14 @@ class SpectrumImage:
             return self.crop_image(crop_y=slice(level-1, level), info=info)
         else:
             return self.crop_image(crop_y=slice(level, level+1), info=info)
+
+    def run_integration(self, info=None):
+        integrated = np.sum(self.image, axis=0)
+
+        if info is None:
+            info = self.info.copy()
+
+        return Spectrum(integrated, info)
 
     @staticmethod
     def __angle_from_m(job,
