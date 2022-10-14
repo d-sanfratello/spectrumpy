@@ -19,6 +19,7 @@ class SpectrumImage:
             self._info['original'] = np.copy(image)
 
     def show(self,
+             fig=None,
              log=True, model=None, x=None,
              show=False, save=True, name='./image_show.pdf',
              legend=False,
@@ -34,10 +35,14 @@ class SpectrumImage:
                           "artifacts in the representation. This should not "
                           "affect data.")
 
-        fig = plt.figure(*args)
+        user_defined_fig = True
+        if fig is None:
+            fig = plt.figure(*args)
+            user_defined_fig = False
+
         ax = fig.gca()
 
-        if 'title' in kwargs.keys():
+        if 'title' in kwargs.keys() and not user_defined_fig:
             ax.set_title(kwargs['title'])
 
         if log:
@@ -77,7 +82,8 @@ class SpectrumImage:
         if show:
             plt.show()
 
-        plt.close()
+        if not user_defined_fig:
+            plt.close()
 
     def rotate_image(self, angle, info=None):
         rotated = scipy.ndimage.rotate(self.image, angle, reshape=True)
