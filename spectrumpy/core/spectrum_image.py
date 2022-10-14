@@ -4,10 +4,6 @@ import numpy as np
 import scipy.ndimage
 import warnings
 
-from cpnest import CPNest
-
-# from spectrumpy.bayes_inference import RotationPosterior
-
 
 class SpectrumImage:
     def __init__(self, image, is_lamp, info=None):
