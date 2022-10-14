@@ -81,42 +81,6 @@ class SpectrumImage:
 
         plt.close()
 
-    def find_rotation_angle(self,
-                            x, y,
-                            error_y, error_x=None,
-                            bounds=[[-np.inf, np.inf],
-                                    [-np.inf, np.inf]],
-                            verbose=1, nlive=1000, maxmcmc=1500, nnest=4,
-                            nensemble=4, seed=1234,
-                            show=True, save=True, name='./joint_rotation.pdf'):
-        # FIXME: strong coupling
-
-        if error_x is None:
-            error_x = np.zeros_like(x)
-
-        x = np.array(x)
-        y = np.array(y)
-        error_y = np.array(error_y)
-
-        rot_angle = RotationPosterior(x, y,
-                                      error_x, error_y,
-                                      bounds)
-
-        job = CPNest(
-            rot_angle,
-            verbose=verbose,
-            nlive=nlive,
-            maxmcmc=maxmcmc,
-            nnest=nnest,
-            nensemble=nensemble,
-            seed=seed
-        )
-
-        job.run()
-
-        return job, self.__angle_from_m(
-            job, show=show, save=save, name=name)
-
     def rotate_image(self, angle, info=None):
         from .spectrum_rotated_image import SpectrumRotatedImage
 
