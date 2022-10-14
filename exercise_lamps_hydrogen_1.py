@@ -9,8 +9,8 @@ from pathlib import Path
 
 from spectrumpy.dataset import Dataset
 from spectrumpy.io import SpectrumPath
-from spectrumpy.bayes_inference import (LinearPosterior,
-                                        RotationPosterior)
+# from spectrumpy.bayes_inference import (LinearPosterior,
+#                                         RotationPosterior)
 from spectrumpy.function_models import Linear
 
 cwd = Path(os.getcwd())
@@ -31,17 +31,17 @@ rot_corr_samples = samples_folder.joinpath('rot_corr_samples.h5')
 calibration_samples = samples_folder.joinpath('hydr_calibration_samples.h5')
 
 find_angle = False
-show_fitted_lamp = True
-show_rotated_lamp = True
-show_slices = True
+show_fitted_lamp = False
+show_rotated_lamp = False
+show_slices = False
 find_angle_correction = False
-show_corr_rotated_lamp = True
-check_alignment = True
-show_cropped_lamp = True
+show_corr_rotated_lamp = False
+check_alignment = False
+show_cropped_lamp = False
 show_top_and_bottom = False
-show_lamp_spectrum = True
+show_lamp_spectrum = False
 calibrate_lines = False
-show_calibration_fit = True
+show_calibration_fit = False
 
 
 if __name__ == "__main__":
