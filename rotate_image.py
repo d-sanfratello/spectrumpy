@@ -36,13 +36,10 @@ if __name__ == "__main__":
                                   is_lamp=options.is_lamp)
         image = image_file.images[str(options.image)]
     except OSError:
-        try:
-            with h5py.File(Path(options.image_file), 'r') as f:
-                image_array = np.asarray(f['image'])
+        with h5py.File(Path(options.image_file), 'r') as f:
+            image_array = np.asarray(f['image'])
 
-            image = SpectrumImage(image, is_lamp=False)
-        finally:
-            pass
+        image = SpectrumImage(image, is_lamp=False)
     finally:
         rot_image = image.rotate_image(options.rot_angle)
 
