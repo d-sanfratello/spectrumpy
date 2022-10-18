@@ -27,6 +27,8 @@ if __name__ == "__main__":
     parser.add_option("-c", "--crop", type='string', dest="crop",
                       default=None,
                       help="")
+    parser.add_option("-v", "--vertical", action='store_true',
+                      dest='vertical_slice', default=False)
 
     (options, args) = parser.parse_args()
 
