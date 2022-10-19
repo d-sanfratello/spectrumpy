@@ -33,8 +33,6 @@ if __name__ == "__main__":
                       dest="mod_bounds",
                       help="The bounds for the model parameters. Write from "
                            "highest to lowest order.")
-    parser.add_option("-t", "--show-title", action='store_true',
-                      dest="show_title", default=False)
     (options, args) = parser.parse_args()
 
     bounds = eval(options.bounds)
@@ -99,11 +97,7 @@ if __name__ == "__main__":
 
     fig = plt.figure()
 
-    title = 'Rotated spectrum'
     labels = ['$x_1$ [$deg/px$]', '$x_0$ [$px$]']
-
-    if options.show_title:
-        fig.suptitle(title)
 
     c = corner.corner(
         samples,
