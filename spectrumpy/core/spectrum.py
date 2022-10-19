@@ -32,6 +32,7 @@ class Spectrum:
              overlay_pixel=False,
              overlay_spectrum=None,
              inverted_overlay=False,
+             label=None,
              *args, **kwargs):
         # FIXME: low cohesion? try splitting in a part only with spectrum
         #  and another only with calibration.
@@ -48,10 +49,12 @@ class Spectrum:
             x_clb = np.linspace(0, len(self.spectrum) - 1, len(self.spectrum))
             x_clb = self.calibration(x_clb)
             ax.plot(x_clb, self.spectrum,
-                    linestyle='solid', color='black', linewidth=0.5)
+                    linestyle='solid', color='black', linewidth=0.5,
+                    label=label)
         else:
             ax.plot(self.spectrum,
-                    linestyle='solid', color='black', linewidth=0.5)
+                    linestyle='solid', color='black', linewidth=0.5,
+                    label=label)
 
         if model is not None:
             if calibration and self.calibration is not None:
