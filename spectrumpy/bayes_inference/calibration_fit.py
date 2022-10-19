@@ -38,7 +38,8 @@ class CalibrationFit(Model):
             if self.prior is None:
                 log_p = 0.
             else:
-                log_p = self.prior.logpdf(np.asarray(param))
+                par = param[len(self.px) + 1:]
+                log_p = self.prior.logpdf(np.asarray(par))
 
         return log_p
 
