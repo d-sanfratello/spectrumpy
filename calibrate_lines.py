@@ -46,8 +46,6 @@ if __name__ == "__main__":
                       dest="density", default=False,
                       help="Whether to run 'figaro' to create an analytic "
                            "pdf and store it in a .json file.")
-    parser.add_option("-t", "--show-title", action='store_true',
-                      dest="show_title", default=False)
     (options, args) = parser.parse_args()
 
     bounds = eval(options.bounds)
@@ -115,9 +113,6 @@ if __name__ == "__main__":
 
         title += rf'{par}\,p^{deg} + '
     title = title[:-3] + '$'
-
-    if options.show_title:
-        fig.suptitle(title)
 
     if options.data_file is not None:
         c = corner.corner(
