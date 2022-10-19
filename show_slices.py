@@ -21,16 +21,19 @@ if __name__ == "__main__":
     parser.add_option("-s", "--slice", type='string', dest="slice",
                       default=None,
                       help="")
-    parser.add_option("-w", "--width", type='int', dest="width",
-                      default=1,
-                      help="")
-    parser.add_option("-c", "--crop", type='string', dest="crop",
-                      default=None,
-                      help="")
     parser.add_option("-v", "--vertical", action='store_true',
                       dest='vertical_slice', default=False)
 
     (options, args) = parser.parse_args()
+
+    slices = eval(options.slice)
+
+    if slices is None:
+        raise ValueError(
+            "I need at least a slice."
+        )
+    if not isinstance(slices, list):
+        slices = [slices]
 
     if options.image_file is None:
         raise AttributeError(
@@ -61,5 +64,34 @@ if __name__ == "__main__":
 
         image = SpectrumImage(image, is_lamp=False)
     finally:
-        # FIXME: Add slicing and slicing show to image
-        pass
+        if not options.vertical_slice:
+            slices_dict = {
+                line: image.slice_image(line) for line in slices
+            }
+
+            int_models = {
+                line: sl.run_integration() for line, sl in slices_dict.items()
+            }
+
+            for line in int_models.keys():
+                exec(
+                    f"def slice_{line}(x): return int_models[{line}].spectrum"
+                )
+
+            models = [
+                eval(f"slice_{line}") for line in int_models.keys()
+            ]
+
+            first_model = int_models[0]
+            x_len = len(first_model.spectrum)
+            x_sup = x_len - 1
+            name = models[0].__name__
+            models.pop(slices.index(0))
+            first_model.show(model=models,
+                             x=np.linspace(0, x_sup, x_len),
+                             legend=True,
+                             show=True,
+                             save=False,
+                             label=name)
+        else:
+            raise ValueError("Not yet implemented.")
