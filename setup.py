@@ -1,6 +1,5 @@
 import numpy as np
 from setuptools import setup
-# from setuptools.command.build_ext import build_ext as _build_ext
 from codecs import open
 
 try:
@@ -20,25 +19,23 @@ except ImportError:
     )
 
 
-# see https://stackoverflow.com/a/21621689/1862861 for why this is here
-# class build_ext(_build_ext):
-#     def finalize_options(self):
-#         _build_ext.finalize_options(self)
-#         # Prevent numpy from thinking it is still in its setup process:
-#         __builtins__.__NUMPY_SETUP__ = False
-#         self.include_dirs.append(np.get_include())
-
-
 with open("requirements.txt") as requires_file:
     requirements = requires_file.read().split("\n")
-#
-# scripts = [
-#     'line-calibration:spectrumpy.bayes_inference.calibration_fit:main'
-# ]
-#
-# modules = [
-#     'spectrumpy/bayes_inference/calibration_fit:main'
-# ]
+
+scripts = [
+    'sp-show-image=spectrumpy.pipelines.show_image:main',
+    'sp-find-angle=spectrumpy.pipelines.find_rotation_angle:main',
+    'sp-rotate=spectrumpy.pipelines.rotate_image:main',
+    'sp-show-slices=spectrumpy.pipelines.show_slices:main',
+    'sp-calibrate:spectrumpy.pipelines.calibrate_lines.main',
+]
+pymodules = [
+    'spectrumpy/pipelines/show_image',
+    'spectrumpy/pipelines/find_rotation_angle',
+    'spectrumpy/pipelines/rotate_image',
+    'spectrumpy/pipelines/show_slices',
+    'spectrum/pipelines/calibrate_lines',
+]
 
 setup(
     name='spectrumpy',
@@ -46,14 +43,14 @@ setup(
     description='A package to do spectral calibration and analysis on python.',
     author='Daniele Sanfratello',
     author_email='d.sanfratello@studenti.unipi.it',
-    url='https://gitlab.com/da.sanfratello/spectrumpy',
+    url='https://github.com/d-sanfratello/spectrumpy',
     python_requires='~=3.7',
     packages=['spectrumpy'],
     install_requires=requirements,
     include_dirs=[np.get_include()],
     setup_requires=['numpy~=1.21.5', 'setuptools_scm'],
-    # py_modules=modules,
-    # entry_points={
-    #     'console_scripts': scripts
-    # },
+    py_modules=pymodules,
+    entry_points={
+        'console_scripts': scripts
+    },
 )
