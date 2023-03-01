@@ -64,7 +64,10 @@ if __name__ == "__main__":
 
         image = SpectrumImage(image, is_lamp=False)
     finally:
-        if not options.vertical_slice:
+        if options.vertical_slice:
+            # FIXME: implement.
+            raise ValueError("Not yet implemented.")
+        else:
             slices_dict = {
                 line: image.slice_image(line) for line in slices
             }
@@ -93,6 +96,3 @@ if __name__ == "__main__":
                              show=True,
                              save=False,
                              label=name)
-        else:
-            # FIXME: implement.
-            raise ValueError("Not yet implemented.")
