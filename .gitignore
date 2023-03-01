@@ -1,2 +1,8 @@
 /exercise_data/
 /data/
+/spectrumpy/__pycache__/
+/spectrumpy/mhspectrasampler/__pycache__/
+/spectrumpy/bayes_inference/__pycache__/
+/spectrumpy/core/__pycache__/
+/__pycache__/
+.idea/vcs.xml
