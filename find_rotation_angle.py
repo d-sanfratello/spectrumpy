@@ -113,7 +113,8 @@ if __name__ == "__main__":
         ),
         bbox_inches='tight'
     )
-    with open(Path(options.out_folder).joinpath(
-            f'quantiles_rotation.txt'), 'w+') as f:
+    with open(
+            Path(options.out_folder).joinpath(f'quantiles_rotation.txt'), 'w+'
+    ) as f:
         f.write(f'angle =\t{a_50} +{a_p} -{a_m}\n')
         f.write(f'offset =\t{q_50} +{q_p} - {q_m}')
