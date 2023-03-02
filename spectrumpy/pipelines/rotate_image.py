@@ -10,7 +10,7 @@ from spectrumpy.core import SpectrumImage
 # FIXME: test me
 
 
-if __name__ == "__main__":
+def main():
     parser = op.OptionParser()
     parser.add_option("-i", "--input", type='string', dest='image_file',
                       help="")
@@ -50,3 +50,7 @@ if __name__ == "__main__":
 
         with h5py.File(path, 'w') as f:
             f.create_dataset('image', data=rot_image.image)
+
+
+if __name__ == "__main__":
+    main()

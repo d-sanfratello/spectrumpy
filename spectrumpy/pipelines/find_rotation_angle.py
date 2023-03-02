@@ -13,7 +13,7 @@ from spectrumpy.bayes_inference import RotationFit
 # FIXME: Test
 
 
-if __name__ == "__main__":
+def main():
     parser = op.OptionParser()
     parser.add_option("-i", "--input", type="string", dest="data_file",
                       default=None,
@@ -118,3 +118,7 @@ if __name__ == "__main__":
     ) as f:
         f.write(f'angle =\t{a_50} +{a_p} -{a_m}\n')
         f.write(f'offset =\t{q_50} +{q_p} - {q_m}')
+
+
+if __name__ == "__main__":
+    main()

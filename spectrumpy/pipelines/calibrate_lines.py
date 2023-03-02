@@ -16,7 +16,7 @@ from spectrumpy.bayes_inference import CalibrationFit
 from spectrumpy.bayes_inference import models as mod
 
 
-if __name__ == "__main__":
+def main():
     parser = op.OptionParser()
     parser.add_option("-i", "--input", type="string", dest="data_file",
                       default=None,
@@ -170,3 +170,7 @@ if __name__ == "__main__":
         save_density(density,
                      folder=Path(options.out_folder).joinpath(options.model),
                      name=f'params_posterior_density_{options.model}')
+
+
+if __name__ == "__main__":
+    main()

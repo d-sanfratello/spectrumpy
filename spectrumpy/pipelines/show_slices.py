@@ -9,7 +9,7 @@ from spectrumpy.core import SpectrumImage
 from spectrumpy.io import SpectrumPath
 
 
-if __name__ == "__main__":
+def main():
     parser = op.OptionParser()
     parser.add_option("-i", "--input", type='string', dest='image_file',
                       help="")
@@ -96,3 +96,7 @@ if __name__ == "__main__":
                              show=True,
                              save=False,
                              label=name)
+
+
+if __name__ == "__main__":
+    main()
