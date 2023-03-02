@@ -5,5 +5,5 @@
 /spectrumpy/bayes_inference/__pycache__/
 /spectrumpy/core/__pycache__/
 /__pycache__/
-.idea/*
 /script.py
+/.idea/
