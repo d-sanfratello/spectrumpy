@@ -11,7 +11,4 @@ grpcio
 filelock
 ray>=1.13.0
 
-ipympl
-jupyterlab
-
 corner

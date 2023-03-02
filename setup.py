@@ -27,14 +27,14 @@ scripts = [
     'sp-find-angle=spectrumpy.pipelines.find_rotation_angle:main',
     'sp-rotate=spectrumpy.pipelines.rotate_image:main',
     'sp-show-slices=spectrumpy.pipelines.show_slices:main',
-    'sp-calibrate:spectrumpy.pipelines.calibrate_lines.main',
+    'sp-calibrate=spectrumpy.pipelines.calibrate_lines:main',
 ]
 pymodules = [
     'spectrumpy/pipelines/show_image',
     'spectrumpy/pipelines/find_rotation_angle',
     'spectrumpy/pipelines/rotate_image',
     'spectrumpy/pipelines/show_slices',
-    'spectrum/pipelines/calibrate_lines',
+    'spectrumpy/pipelines/calibrate_lines',
 ]
 
 setup(
@@ -44,7 +44,7 @@ setup(
     author='Daniele Sanfratello',
     author_email='d.sanfratello@studenti.unipi.it',
     url='https://github.com/d-sanfratello/spectrumpy',
-    python_requires='~=3.7',
+    python_requires='~=3.8.15',
     packages=['spectrumpy'],
     install_requires=requirements,
     include_dirs=[np.get_include()],
