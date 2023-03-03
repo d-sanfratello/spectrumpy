@@ -21,6 +21,9 @@ def main():
                       help="")
     parser.add_option("-o", "--output", type='string', dest='output_image',
                       default=None)
+    parser.add_option("-L", "--limits", action='store_true',
+                      dest='show_limits', default=False,
+                      help="")
 
     (options, args) = parser.parse_args()
 
@@ -50,6 +53,10 @@ def main():
         image = SpectrumImage(image,
                               is_lamp=False)
     finally:
+        if options.show_limits:
+            print(f"Image size (y, x): {image.image.shape}")
+            exit(0)
+
         image.show(
             log=True,
             show=True,
