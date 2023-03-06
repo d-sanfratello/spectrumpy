@@ -27,6 +27,8 @@ scripts = [
     'sp-find-angle=spectrumpy.pipelines.find_rotation_angle:main',
     'sp-rotate=spectrumpy.pipelines.rotate_image:main',
     'sp-show-slices=spectrumpy.pipelines.show_slices:main',
+    'sp-crop-image=spectrumpy.pipelines.crop_image:main',
+    'sp-integrate=spectrumpy.pipelines.integrate:main',
     'sp-calibrate=spectrumpy.pipelines.calibrate_lines:main',
 ]
 pymodules = [
@@ -34,6 +36,8 @@ pymodules = [
     'spectrumpy/pipelines/find_rotation_angle',
     'spectrumpy/pipelines/rotate_image',
     'spectrumpy/pipelines/show_slices',
+    'spectrumpy/pipelines/crop_image',
+    'spectrumpy/pipelines/integrate',
     'spectrumpy/pipelines/calibrate_lines',
 ]
 
