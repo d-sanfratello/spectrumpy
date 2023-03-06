@@ -33,6 +33,7 @@ class Spectrum:
              overlay_spectrum=None,
              inverted_overlay=False,
              label=None,
+             model_label=None,
              *args, **kwargs):
         # FIXME: low cohesion? try splitting in a part only with spectrum
         #  and another only with calibration.
@@ -62,7 +63,15 @@ class Spectrum:
             else:
                 x_clb = x
 
-            if hasattr(model, '__iter__') \
+            if hasattr(model, '__iter__') and \
+                    isinstance(model[0], Spectrum):
+                for mdl, label in zip(model, model_label):
+                    sp = mdl.spectrum
+                    ax.plot(x_clb, sp,
+                            linestyle='dashed', linewidth=0.5,
+                            label=label
+                            )
+            elif hasattr(model, '__iter__') \
                     and not hasattr(model[0], '__call__'):
                 model = np.asarray(model)
                 l, m, h = np.percentile(model, [5, 50, 95], axis=0)
