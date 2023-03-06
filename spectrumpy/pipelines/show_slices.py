@@ -23,6 +23,9 @@ def main():
                       help="")
     parser.add_option("-v", "--vertical", action='store_true',
                       dest='vertical_slice', default=False)
+    parser.add_option("-l", "--lamp", action='store_true', dest='is_lamp',
+                      default=False,
+                      help="")
 
     (options, args) = parser.parse_args()
 
@@ -46,7 +49,7 @@ def main():
 
     try:
         image_file = SpectrumPath(Path(options.image_file),
-                                  is_lamp=False)
+                                  is_lamp=options.is_lamp)
         image = image_file.images[str(options.image)]
 
         if options.output_image is not None:
@@ -62,40 +65,29 @@ def main():
         with h5py.File(Path(options.image_file), 'r') as f:
             image = np.asarray(f['image'])
 
-        image = SpectrumImage(image, is_lamp=False)
+        image = SpectrumImage(image, is_lamp=options.is_lamp)
     finally:
         if options.vertical_slice:
             # FIXME: implement.
             raise ValueError("Not yet implemented.")
         else:
-            slices_dict = {
-                line: image.slice_image(line) for line in slices
-            }
-
-            int_models = {
-                line: sl.run_integration() for line, sl in slices_dict.items()
-            }
-
-            for line in int_models.keys():
-                exec(
-                    f"def slice_{line}(x): return int_models[{line}].spectrum"
-                )
-
             models = [
-                eval(f"slice_{line}") for line in int_models.keys()
+                image.slice_image(line).run_integration() for line in slices
             ]
-
-            first_model = int_models[0]
+            first_model = models[0]
+            name = f"slice {slices[0]}"
+            models.pop(0)
             x_len = len(first_model.spectrum)
             x_sup = x_len - 1
-            name = models[0].__name__
-            models.pop(slices.index(0))
+            labels = [f"slice {sl}" for sl in slices[1:]]
+
             first_model.show(model=models,
                              x=np.linspace(0, x_sup, x_len),
                              legend=True,
                              show=True,
                              save=False,
-                             label=name)
+                             label=name,
+                             model_label=labels)
 
 
 if __name__ == "__main__":
