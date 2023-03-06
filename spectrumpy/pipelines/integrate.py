@@ -17,27 +17,13 @@ def main():
     parser.add_option("-I", "--image", type='int', dest='image',
                       default=0,
                       help="")
-    parser.add_option("-o", "--output", type='string', dest='output_image',
+    parser.add_option("-o", "--output", type='string', dest='output_data',
                       default=None)
-    parser.add_option("-c", "--crop", type='string', dest="crop",
-                      default=None,
-                      help="")
-    parser.add_option("-v", "--vertical", action='store_true',
-                      dest='vertical_crop', default=False)
     parser.add_option("-l", "--lamp", action='store_true', dest='is_lamp',
                       default=False,
                       help="")
 
     (options, args) = parser.parse_args()
-
-    crop = eval(options.crop)
-
-    if crop is None:
-        raise ValueError(
-            "I need two rows or columns to crop the image."
-        )
-    if not isinstance(crop, list):
-        crop = [crop]
 
     if options.image_file is None:
         raise AttributeError(
@@ -64,14 +50,11 @@ def main():
 
         image = SpectrumImage(image, is_lamp=options.is_lamp)
     finally:
-        if options.vertical_crop:
-            cropped_image = image.crop_image(crop_x=crop)
-        else:
-            cropped_image = image.crop_image(crop_y=crop)
+        spectrum = image.run_integration()
 
-        path = options.output_image
+        path = options.output_data
         if path is None:
-            new_filename = f"cropped_{crop[0]}-{crop[1]}.h5"
+            new_filename = "integrated_spectrum.h5"
             path = Path(os.getcwd()).joinpath(new_filename)
         else:
             path = Path(path)
@@ -80,7 +63,7 @@ def main():
             path = path.with_suffix('.h5')
 
         with h5py.File(path, 'w') as f:
-            f.create_dataset('image', data=cropped_image.image)
+            f.create_dataset('spectrum', data=spectrum.spectrum)
 
 
 if __name__ == "__main__":
