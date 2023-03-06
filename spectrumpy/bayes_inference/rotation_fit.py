@@ -11,7 +11,7 @@ from .constants import LOGSQRT2PI
 class RotationFit(Model):
     def __init__(self,
                  x, dx, y, dy,
-                 x_bounds, mod_bounds):
+                 x_bounds=None, mod_bounds=None):
         self.x = x
         self.dx = dx
         self.y = y
@@ -19,9 +19,21 @@ class RotationFit(Model):
 
         self.n_pts = len(x)
 
-        self.bounds = [
-            x_bounds[:] for _ in range(self.x.shape[0])
-        ] + mod_bounds
+        if mod_bounds is None:
+            raise ValueError(
+                "I need bounds of model parameters to perform the inference."
+            )
+
+        if x_bounds is None:
+            c_level = 5
+            x_bounds = [
+                [d - c_level * s, d + c_level * s]
+                for d, s in zip(self.x, self.dx)
+            ]
+        else:
+            x_bounds = [x_bounds[:] for _ in range(self.n_pts)]
+
+        self.bounds = x_bounds + mod_bounds
         self.names = [
             f'pt_{i}' for i in range(self.n_pts)
         ] + mod.names['linear']
