@@ -23,6 +23,9 @@ def main():
     parser.add_option("-o", "--output", type='string', dest='output_image',
                       default='./rotated_image.h5',
                       help="")
+    parser.add_option("-l", "--lamp", action='store_true', dest='is_lamp',
+                      default=False,
+                      help="")
 
     (options, args) = parser.parse_args()
 
@@ -38,8 +41,7 @@ def main():
     except OSError:
         with h5py.File(Path(options.image_file), 'r') as f:
             image_array = np.asarray(f['image'])
-
-        image = SpectrumImage(image, is_lamp=False)
+        image = SpectrumImage(image_array, is_lamp=options.is_lamp)
     finally:
         rot_image = image.rotate_image(options.rot_angle)
 
