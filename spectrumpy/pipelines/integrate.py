@@ -8,12 +8,12 @@ from pathlib import Path
 
 from spectrumpy.core import SpectrumImage
 from spectrumpy.io import SpectrumPath
+from spectrumpy.io import parse_image_path
 
 
 def main():
     parser = op.OptionParser()
-    parser.add_option("-i", "--input", type='string', dest='image_file',
-                      help="")
+    parser.disable_interspersed_args()
     parser.add_option("-I", "--image", type='int', dest='image',
                       default=0,
                       help="")
@@ -25,45 +25,27 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    if options.image_file is None:
-        raise AttributeError(
-            "I need a fits or h5 file to crop."
-        )
+    image = parse_image_path(
+        args,
+        missing_arg_msg="I need a fits or h5 file to integrate on.",
+        is_lamp=options.is_lamp,
+        image=options.image,
+        save_output=False
+    )
 
-    try:
-        image_file = SpectrumPath(Path(options.image_file),
-                                  is_lamp=options.is_lamp)
-        image = image_file.images[str(options.image)]
+    spectrum = image.run_integration()
 
-        if options.output_image is not None:
-            path = options.output_image
+    if options.output_data is None:
+        new_filename = "integrated_spectrum.h5"
+        path = Path(os.getcwd()).joinpath(new_filename)
+    else:
+        path = Path(options.output_data)
 
-            if path.find(".h5") < 0:
-                path += '.h5'
-            path = Path(path)
+    if path.suffix != ".h5":
+        path = path.with_suffix('.h5')
 
-            with h5py.File(path, 'w') as f:
-                f.create_dataset('image', data=image.image)
-    except OSError:
-        with h5py.File(Path(options.image_file), 'r') as f:
-            image = np.asarray(f['image'])
-
-        image = SpectrumImage(image, is_lamp=options.is_lamp)
-    finally:
-        spectrum = image.run_integration()
-
-        path = options.output_data
-        if path is None:
-            new_filename = "integrated_spectrum.h5"
-            path = Path(os.getcwd()).joinpath(new_filename)
-        else:
-            path = Path(path)
-
-        if path.suffix != ".h5":
-            path = path.with_suffix('.h5')
-
-        with h5py.File(path, 'w') as f:
-            f.create_dataset('spectrum', data=spectrum.spectrum)
+    with h5py.File(path, 'w') as f:
+        f.create_dataset('spectrum', data=spectrum.spectrum)
 
 
 if __name__ == "__main__":
