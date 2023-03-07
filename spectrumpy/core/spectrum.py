@@ -10,17 +10,20 @@ from spectrumpy import function_models as fs
 
 
 class Spectrum:
-    def __init__(self, int_spectrum, info):
+    def __init__(self, int_spectrum, info=None):
         self.spectrum = int_spectrum
         self._info = info
 
         self.dataset = None
         self.calibration = None
 
-        if 'dataset' in self.info.keys():
-            self.dataset = self.info['dataset']
-        if 'calibration' in self.info.keys():
-            self.calibration = self.info['calibration']
+        if info is None:
+            self._info = {}
+        else:
+            if 'dataset' in self.info.keys():
+                self.dataset = self.info['dataset']
+            if 'calibration' in self.info.keys():
+                self.calibration = self.info['calibration']
 
         self._info['uncalib spectrum'] = np.copy(self.spectrum)
 
