@@ -30,6 +30,7 @@ scripts = [
     'sp-crop-image=spectrumpy.pipelines.crop_image:main',
     'sp-integrate=spectrumpy.pipelines.integrate:main',
     'sp-show-spectrum=spectrumpy.pipelines.show_spectrum:main',
+    'sp-simulate-spectrum=spectrumpy.pipelines.simulate_spectrum:main',
     'sp-calibrate=spectrumpy.pipelines.calibrate_lines:main',
 ]
 pymodules = [
@@ -39,7 +40,8 @@ pymodules = [
     'spectrumpy/pipelines/show_slices',
     'spectrumpy/pipelines/crop_image',
     'spectrumpy/pipelines/integrate',
-    'spectrumpy/pipeliens/show_spectrum',
+    'spectrumpy/pipelines/show_spectrum',
+    'spectrumpy/pipelines/simulate_spectrum',
     'spectrumpy/pipelines/calibrate_lines',
 ]
 
