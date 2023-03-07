@@ -1,13 +1,10 @@
 import os
 
 import h5py
-import numpy as np
 import optparse as op
 
 from pathlib import Path
 
-from spectrumpy.core import SpectrumImage
-from spectrumpy.io import SpectrumPath
 from spectrumpy.io import parse_image_path
 
 

@@ -1,11 +1,5 @@
-import h5py
-import matplotlib.pyplot as plt
-import numpy as np
 import optparse as op
 
-from pathlib import Path
-
-from spectrumpy.core import Spectrum
 from spectrumpy.io import parse_spectrum_path
 
 
