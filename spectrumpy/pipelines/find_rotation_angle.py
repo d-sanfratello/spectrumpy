@@ -1,7 +1,6 @@
 import corner
 import cpnest
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import optparse as op
@@ -10,15 +9,10 @@ from pathlib import Path
 
 from spectrumpy.bayes_inference import RotationFit
 
-# FIXME: Test
-
 
 def main():
     parser = op.OptionParser()
-    parser.add_option("-i", "--input", type="string", dest="data_file",
-                      default=None,
-                      help="The file to input the point on which the "
-                           "inference is carried out.")
+    parser.disable_interspersed_args()
     parser.add_option("-o", "--output-folder", dest="out_folder",
                       default=Path(os.getcwd()),
                       help="The folder where to save the output of this "
@@ -50,16 +44,17 @@ def main():
     if options.mod_bounds is not None:
         mod_bounds = eval(options.mod_bounds)
 
-    if options.data_file is not None:
-        data = np.genfromtxt(options.data_file, names=True)
-        x = data['x']
-        dx = data['dx']
-        y = data['y']
-        dy = data['dy']
-    else:
-        raise AttributeError(
+    if len(args) == 0:
+        raise ValueError(
             "A dataset must be provided."
         )
+    data_file = Path(args[0])
+
+    data = np.genfromtxt(data_file, names=True)
+    x = data['x']
+    dx = data['dx']
+    y = data['y']
+    dy = data['dy']
 
     if not options.postprocess:
         fit_model = RotationFit(
