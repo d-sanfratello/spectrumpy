@@ -3,60 +3,47 @@ import cpnest
 import h5py
 import numpy as np
 import os
-import optparse as op
+import argparse as ag
 
 from pathlib import Path
 
 from spectrumpy.bayes_inference import RotationFit
+from spectrumpy.io import parse_data_path, parse_bounds
 
 
 def main():
-    parser = op.OptionParser()
-    parser.disable_interspersed_args()
-    parser.add_option("-o", "--output-folder", dest="out_folder",
-                      default=Path(os.getcwd()),
-                      help="The folder where to save the output of this "
-                           "command.")
-    parser.add_option("-p", "--postprocess", action='store_true',
-                      dest="postprocess", default=False,
-                      help="Whether to do a new inference or to open a file "
-                           "of samples.")
-    parser.add_option("-b", "--bounds", type="string",
-                      dest="bounds", default=None,
-                      help="The bounds for the pixels. If unset, it selects "
-                           "an interval plus or minus 5 sigma around each "
-                           "point.")
-    parser.add_option("-B", "--model-bounds", type="string",
-                      dest="mod_bounds", default=None,
-                      help="The bounds for the model parameters. Write from "
-                           "highest to lowest order.")
-    (options, args) = parser.parse_args()
+    parser = ag.ArgumentParser()
+    parser.add_argument('data_path')
+    parser.add_argument("-o", "--output-folder", dest="out_folder",
+                        default=Path(os.getcwd()),
+                        help="The folder where to save the output of this "
+                             "command.")
+    parser.add_argument("-p", "--postprocess", action='store_true',
+                        dest="postprocess",
+                        default=False,
+                        help="Whether to do a new inference or to open a "
+                             "file of samples.")
+    parser.add_argument("-b", "--bounds", dest="bounds",
+                        default=None,
+                        help="The bounds for the pixels. If unset, "
+                             "it selects an interval plus or minus 5 sigma "
+                             "around each point.")
+    parser.add_argument("-B", "--model-bounds",
+                        dest="mod_bounds",
+                        default=None,
+                        required=True,
+                        help="The bounds for the model parameters. Write "
+                             "from highest to lowest order.")
+    args = parser.parse_args()
 
-    if not options.postprocess and options.mod_bounds is None:
-        raise ValueError("When trying a new inference, bounds must be set.")
+    bounds, mod_bounds = parse_bounds(args)
 
-    if options.bounds is not None:
-        bounds = eval(options.bounds)
-        bounds = np.array(bounds).flatten()
-    else:
-        bounds = options.bounds
+    x, dx, y, dy = parse_data_path(
+        args,
+        data_name='data_path'
+    )
 
-    if options.mod_bounds is not None:
-        mod_bounds = eval(options.mod_bounds)
-
-    if len(args) == 0:
-        raise ValueError(
-            "A dataset must be provided."
-        )
-    data_file = Path(args[0])
-
-    data = np.genfromtxt(data_file, names=True)
-    x = data['x']
-    dx = data['dx']
-    y = data['y']
-    dy = data['dy']
-
-    if not options.postprocess:
+    if not args.postprocess:
         fit_model = RotationFit(
             x, dx, y, dy, x_bounds=bounds, mod_bounds=mod_bounds
         )
@@ -67,7 +54,7 @@ def main():
             nlive=1000,  # 1000
             maxmcmc=5000,  # 5000
             nensemble=1,
-            output=Path(options.out_folder).joinpath('rotation_fit')
+            output=Path(args.out_folder).joinpath('rotation_fit')
         )
         work.run()
         post = work.posterior_samples.ravel()
@@ -78,14 +65,14 @@ def main():
         ])
 
         with h5py.File(
-            Path(options.out_folder).joinpath(
+            Path(args.out_folder).joinpath(
                 'rotation_samples.h5'), 'w'
         ) as f:
             f.create_dataset('rotation_params',
                              data=samples)
     else:
         with h5py.File(
-                Path(options.out_folder).joinpath(
+                Path(args.out_folder).joinpath(
                     'rotation_samples.h5'), 'r'
         ) as f:
             post = np.asarray(f['rotation_params'])
@@ -115,7 +102,7 @@ def main():
         use_math_text=True,
     )
     c.savefig(
-        Path(options.out_folder).joinpath(
+        Path(args.out_folder).joinpath(
             f'joint_posterior_rotation.pdf'
         ),
         bbox_inches='tight'

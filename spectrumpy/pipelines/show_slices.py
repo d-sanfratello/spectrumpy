@@ -1,29 +1,32 @@
 import numpy as np
-import optparse as op
+import argparse as ag
 
 from spectrumpy.io import parse_image_path
 
 
 def main():
-    parser = op.OptionParser()
-    parser.disable_interspersed_args()
-    parser.add_option("-I", "--image", type='int', dest='image',
-                      default=0,
-                      help="")
-    parser.add_option("-o", "--output", type='string', dest='output_image',
-                      default=None)
-    parser.add_option("-s", "--slice", type='string', dest="slice",
-                      default=None,
-                      help="")
-    parser.add_option("-v", "--vertical", action='store_true',
-                      dest='vertical_slice', default=False)
-    parser.add_option("-l", "--lamp", action='store_true', dest='is_lamp',
-                      default=False,
-                      help="")
+    parser = ag.ArgumentParser()
+    parser.add_argument("image_path")
+    parser.add_argument("-I", "--image", type=int, dest='image',
+                        default=0,
+                        help="")
+    parser.add_argument("-o", "--output", dest='output_image',
+                        default=None,
+                        help="")
+    parser.add_argument("-s", "--slice", dest="slice",
+                        default=None,
+                        required=True,
+                        help="")
+    parser.add_argument("-v", "--vertical", action='store_true',
+                        dest='vertical_slice',
+                        default=False,
+                        help="")
+    parser.add_argument("-l", "--lamp", action='store_true', dest='is_lamp',
+                        default=False,
+                        help="")
+    args = parser.parse_args()
 
-    (options, args) = parser.parse_args()
-
-    slices = eval(options.slice)
+    slices = eval(args.slice)
     if slices is None:
         raise ValueError(
             "I need at least a slice."
@@ -33,13 +36,13 @@ def main():
 
     image = parse_image_path(
         args,
-        missing_arg_msg="I need a fits or h5 file to show you.",
-        is_lamp=options.is_lamp,
-        image=options.image,
-        output_image=options.output_image,
+        data_name='image_path',
+        is_lamp=args.is_lamp,
+        image=args.image,
+        output_image=args.output_image,
     )
 
-    if options.vertical_slice:
+    if args.vertical_slice:
         # FIXME: implement.
         raise ValueError("Not yet implemented.")
     else:

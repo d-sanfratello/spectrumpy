@@ -1,5 +1,5 @@
 import h5py
-import optparse as op
+import argparse as ag
 
 from pathlib import Path
 
@@ -7,39 +7,33 @@ from spectrumpy.io import parse_image_path
 
 
 def main():
-    parser = op.OptionParser()
-    parser.disable_interspersed_args()
-    parser.add_option("-I", "--image", type='int', dest='image',
-                      default=0,
-                      help="")
-    parser.add_option("-r", "--rotate", type='float', dest='rot_angle',
-                      default=0,
-                      help="")
-    parser.add_option("-o", "--output", type='string', dest='output_image',
-                      default='./rotated_image.h5',
-                      help="")
-    parser.add_option("-l", "--lamp", action='store_true', dest='is_lamp',
-                      default=False,
-                      help="")
-
-    (options, args) = parser.parse_args()
-
-    if options.image_file is None:
-        raise AttributeError(
-            "I need a fits or h5 file to rotate."
-        )
+    parser = ag.OptionParser()
+    parser.add_argument("image_path")
+    parser.add_argument("-I", "--image", type=int, dest='image',
+                        default=0,
+                        help="")
+    parser.add_argument("-r", "--rotate", type=float, dest='rot_angle',
+                        required=True,
+                        help="")
+    parser.add_argument("-o", "--output", dest='output_image',
+                        default='./rotated_image.h5',
+                        help="")
+    parser.add_argument("-l", "--lamp", action='store_true', dest='is_lamp',
+                        default=False,
+                        help="")
+    args = parser.parse_args()
 
     image = parse_image_path(
         args,
-        missing_arg_msg="I need a fits or h5 file to rotate.",
+        data_name='image_path',
         save_output=False,
-        is_lamp=options.is_lamp,
-        image=options.image
+        is_lamp=args.is_lamp,
+        image=args.image
     )
 
-    rot_image = image.rotate_image(options.rot_angle)
+    rot_image = image.rotate_image(args.rot_angle)
 
-    path = Path(options.output_image)
+    path = Path(args.output_image)
     if path.suffix != ".h5":
         path = path.with_suffix('.h5')
 

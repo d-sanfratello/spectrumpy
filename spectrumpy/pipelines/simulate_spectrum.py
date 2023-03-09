@@ -1,33 +1,24 @@
-import corner
-import cpnest
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 import os
-import optparse as op
+import argparse as ag
 
-from corner import quantile
-from figaro.mixture import DPGMM
-from figaro.load import save_density, load_density
-from figaro.utils import get_priors
 from pathlib import Path
 
 from spectrumpy.bayes_inference import models as mod
 
-# FIXME: Remove simulation. Maybe add it to another pipeline.
-
 
 def main():
-    parser = op.OptionParser()
-    parser.disable_interspersed_args()
-    parser.add_option("-o", "--output-folder", dest="out_folder",
-                      default=None,
-                      help="The folder where to save the simulated lines.")
-    (options, args) = parser.parse_args()
+    parser = ag.ArgumentParser()
+    parser.add_argment("-o", "--output-folder", dest="out_folder",
+                       default=None,
+                       help="The folder where to save the simulated lines.")
+    args = parser.parse_args()
 
-    if options.out_folder is None:
+    out_folder = args.out_folder
+    if out_folder is None:
         out_folder = os.getcwd()
-    out_folder = Path(options.out_folder)
+    out_folder = Path(out_folder)
 
     true_vals = [1e-3, 1e-2, 10, 1]
     px = np.random.uniform(low=0, high=3000, size=8)

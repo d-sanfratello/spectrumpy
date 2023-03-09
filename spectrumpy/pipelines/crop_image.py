@@ -1,7 +1,7 @@
 import os
 
 import h5py
-import optparse as op
+import argparse as ag
 
 from pathlib import Path
 
@@ -9,25 +9,30 @@ from spectrumpy.io import parse_image_path
 
 
 def main():
-    parser = op.OptionParser()
-    parser.disable_interspersed_args()
-    parser.add_option("-I", "--image", type='int', dest='image',
-                      default=0,
-                      help="")
-    parser.add_option("-o", "--output", type='string', dest='output_image',
-                      default=None)
-    parser.add_option("-c", "--crop", type='string', dest="crop",
-                      default=None,
-                      help="")
-    parser.add_option("-v", "--vertical", action='store_true',
-                      dest='vertical_crop', default=False)
-    parser.add_option("-l", "--lamp", action='store_true', dest='is_lamp',
-                      default=False,
-                      help="")
+    parser = ag.ArgumentParser(
+        prog='sp-crop-image',
+        description='Pipeline to crop a spectrum image.',
+    )
+    parser.add_argument('image_path')
+    parser.add_argument("-I", "--image", type=int, dest='image',
+                        default=0,
+                        help="The image to be selected in a fits file.")
+    parser.add_argument("-o", "--output", dest='output_image',
+                        default=None,
+                        help="")
+    parser.add_argument("-c", "--crop", dest="crop", default=None,
+                        required=True,
+                        help="")
+    parser.add_argument("-v", "--vertical", action='store_true',
+                        dest='vertical_crop',
+                        default=False,
+                        help="")
+    parser.add_argument("-l", "--lamp", action='store_true', dest='is_lamp',
+                        default=False,
+                        help="")
+    args = parser.parse_args()
 
-    (options, args) = parser.parse_args()
-
-    crop = eval(options.crop)
+    crop = eval(args.crop)
     if crop is None:
         raise ValueError(
             "I need two rows or columns to crop the image."
@@ -37,22 +42,22 @@ def main():
 
     image = parse_image_path(
         args,
-        missing_arg_msg="I need a fits or h5 file to crop.",
-        is_lamp=options.is_lamp,
-        image=options.image,
+        data_name='image_path',
+        is_lamp=args.is_lamp,
+        image=args.image,
         save_output=False
     )
 
-    if options.vertical_crop:
+    if args.vertical_crop:
         cropped_image = image.crop_image(crop_x=crop)
     else:
         cropped_image = image.crop_image(crop_y=crop)
 
-    if options.output_image is None:
+    if args.output_image is None:
         new_filename = f"cropped_{crop[0]}-{crop[1]}.h5"
         path = Path(os.getcwd()).joinpath(new_filename)
     else:
-        path = Path(options.output_image)
+        path = Path(args.output_image)
 
     if path.suffix != ".h5":
         path = path.with_suffix('.h5')

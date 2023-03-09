@@ -1,23 +1,23 @@
-import optparse as op
+import argparse as ag
 
 from spectrumpy.io import parse_spectrum_path
 
 
 def main():
-    parser = op.OptionParser()
-    parser.disable_interspersed_args()
-    parser.add_option("-L", "--limits", action='store_true',
-                      dest='show_limits', default=False,
-                      help="")
-
-    (options, args) = parser.parse_args()
+    parser = ag.ArgumentParser()
+    parser.add_argument('spectrum_path')
+    parser.add_argument("-L", "--limits", action='store_true',
+                        dest='show_limits',
+                        default=False,
+                        help="")
+    args = parser.parse_args()
 
     spectrum = parse_spectrum_path(
         args,
-        missing_arg_msg="I need a h5 spectrum file to show you."
+        data_name='spectrum_path'
     )
 
-    if options.show_limits:
+    if args.show_limits:
         print(f"Spectrum size: {spectrum.spectrum.shape[0]}")
         exit(0)
 
