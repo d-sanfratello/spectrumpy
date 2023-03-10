@@ -155,12 +155,14 @@ class Spectrum:
 
         plt.close()
 
-    def show_calibration_fit(self,
-                             px, lam, s_px, s_lam=None,
+    @staticmethod
+    def show_calibration_fit(px, lam, s_px, s_lam=None,
                              model=None, x=None,
                              show=False, save=True,
                              name='./show_calibration_fit.pdf',
                              legend=False,
+                             logscale=False,
+                             errorscale=None,
                              *args, **kwargs):
         if model is None:
             raise ValueError("You need to pass a model, to show the fit.")
@@ -169,14 +171,22 @@ class Spectrum:
 
         fig = plt.figure(*args)
         ax = fig.gca()
+        ax.grid(axis='both', which='major')
 
         if 'title' in kwargs.keys():
             ax.set_title(kwargs['title'])
 
-        ax.grid()
-        ax.errorbar(px, lam, s_lam, s_px,
-                    capsize=2, linestyle='',
-                    ms=2)
+        if errorscale is None:
+            ax.errorbar(px, lam, s_lam, s_px,
+                        capsize=2, linestyle='',
+                        ms=2)
+        else:
+            ax.errorbar(px, lam, s_lam*errorscale, s_px*errorscale,
+                        label=f"Errorbars are scaled by a factor of"
+                              f" {errorscale}",
+                        capsize=2, linestyle='',
+                        ms=2)
+            legend = True
 
         if model is not None:
             if hasattr(model, '__iter__') \
@@ -184,8 +194,8 @@ class Spectrum:
                 model = np.asarray(model)
                 l, m, h = np.percentile(model, [5, 50, 95], axis=0)
 
-                ax.plot(x, m, lw=0.5, color='r')
-                ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
+                ax.plot(x, m, lw=0.8, color='r')
+                ax.fill_between(x, l, h, facecolor='red', alpha=0.25)
             elif hasattr(model, '__iter__') \
                     and hasattr(model[0], '__call__'):
                 for mdl in model:
@@ -206,6 +216,10 @@ class Spectrum:
 
         if legend:
             ax.legend(loc='best')
+
+        if logscale:
+            ax.set_xscale('log')
+            ax.set_yscale('log')
 
         if save:
             fig.savefig(name)
