@@ -6,9 +6,12 @@ from . import models as mod
 
 from .constants import LOGSQRT2PI
 
+
 class CalibrationFit(Model):
     def __init__(self,
-                 px, dpx, l, dl, x_bounds, mod_bounds, model, prior=None):
+                 px, dpx, l, dl,
+                 model,
+                 x_bounds=None, mod_bounds=None, prior=None):
         self.px = px
         self.dpx = dpx
         self.l = l
@@ -18,19 +21,32 @@ class CalibrationFit(Model):
 
         self.prior = prior
 
-        if model in mod.available_models:
-            self.bounds = [
-                              x_bounds[:] for _ in range(self.px.shape[0])
-                          ] + mod_bounds
-            self.names = [
-                f'px_{i}' for i in range(self.n_pts)
-            ] + mod.names[model]
-            self.fit_model = mod.models[model]
-        else:
+        if model not in mod.available_models:
             raise ValueError(
                 "Unsupported model. Please choose among one of these: "
                 + " ".join(mod.available_models)
             )
+
+        if mod_bounds is None:
+            raise ValueError(
+                "I need bounds of model parameters to perform the inference."
+            )
+
+        if x_bounds is None:
+            c_level = 5
+            x_bounds = [
+                [d - c_level * s, d + c_level * s]
+                for d, s in zip(self.px, self.dpx)
+            ]
+        else:
+            x_bounds = [x_bounds[:] for _ in range(self.n_pts)]
+
+        self.mod_bounds = mod_bounds
+        self.bounds = x_bounds + mod_bounds
+        self.names = [
+            f'px_{i}' for i in range(self.n_pts)
+        ] + mod.names[model]
+        self.fit_model = mod.models[model]
 
     def log_prior(self, param):
         log_p = super(CalibrationFit, self).log_prior(param)
@@ -39,7 +55,11 @@ class CalibrationFit(Model):
                 log_p = 0.
             else:
                 par = param[len(self.px) + 1:]
-                log_p = self.prior.logpdf(np.asarray(par))
+                log_p_old = self.prior.logpdf(np.asarray(par))
+                new_bounds = self.mod_bounds[0]
+                log_new = - np.log(new_bounds[1] - new_bounds[0])
+
+                log_p = log_p_old + log_new
 
         return log_p
 
