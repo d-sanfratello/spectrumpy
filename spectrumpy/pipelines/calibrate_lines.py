@@ -44,13 +44,17 @@ def main():
                         dest="postprocess", default=False,
                         help="Whether to do a new inference or to open a "
                              "file of samples.")
+    parser.add_argument("-d", "--density", action='store_true',
+                        dest="generate_density", default=False,
+                        help="With this flag set, the pipeline will generate a"
+                             " new density from the given samples.")
     parser.add_argument("--log-scale", action='store_true',
                         dest="logscale", default=False,
                         help="Setting the log scale on the calibration fit "
                              "plot.")
     parser.add_argument("--error-scale", dest="error_scale", type=float,
                         default=None,
-                        help="A number to scale the errorbars.")
+                        help="A number to scale the errorbars in the plot.")
     args = parser.parse_args()
 
     bounds, mod_bounds = parse_bounds(args)
@@ -120,12 +124,24 @@ def main():
         bbox_inches='tight'
     )
 
+    medians = []
     for _, lam in enumerate(mod.names[args.model]):
         x = samples[:, _]
         q_16, q_50, q_84 = quantile(x, [0.16, 0.5, 0.84])
         q_m, q_p = q_50 - q_16, q_84 - q_50
 
         print(f'{lam} =\t{q_50:.5e} +{q_p:.3e} -{q_m:.3e}')
+
+        medians.append(q_50)
+    medians = np.asarray(medians)
+
+    with h5py.File(
+            Path(args.out_folder).joinpath(
+                args.model,
+                'median_params.h5'
+            ), 'w') as f:
+        f.create_dataset('params', data=medians)
+        f.create_dataset('bounds', data=mod_bounds)
 
     px_width = max(px) - min(px)
     l_width = max(l) - min(l)
@@ -157,40 +173,41 @@ def main():
         errorscale=args.error_scale
     )
 
-    d_bounds = [
-        [samples[:, _].min(), samples[:, _].max()]
-        for _ in range(samples.shape[1])
-    ]
-    for _, b in enumerate(d_bounds):
-        length = b[1] - b[0]
-        b[0] -= length * 1e-2
-        b[1] += length * 1e-2
+    if args.generate_density:
+        d_bounds = [
+            [samples[:, _].min(), samples[:, _].max()]
+            for _ in range(samples.shape[1])
+        ]
+        for _, b in enumerate(d_bounds):
+            length = b[1] - b[0]
+            b[0] -= length * 1e-2
+            b[1] += length * 1e-2
 
-    prior = get_priors(d_bounds, samples, probit=True)
+        prior = get_priors(d_bounds, samples, probit=True)
 
-    mix = DPGMM(bounds=d_bounds, prior_pars=prior, probit=True)
-    density = mix.density_from_samples(samples)
+        mix = DPGMM(bounds=d_bounds, prior_pars=prior, probit=True)
+        density = mix.density_from_samples(samples)
 
-    save_density([density],
-                 folder=out_folder.joinpath(args.model),
-                 name=f'params_posterior_density_{args.model}',
-                 ext='json')
+        save_density([density],
+                     folder=out_folder.joinpath(args.model),
+                     name=f'params_posterior_density_{args.model}',
+                     ext='json')
 
-    labs = [lab.split(' ')[0] for lab in labels]
-    uts = [lab.split(' ')[1][1:-1] for lab in labels]
+        labs = [lab.split(' ')[0] for lab in labels]
+        uts = [lab.split(' ')[1][1:-1] for lab in labels]
 
-    plot_multidim([density],
-                  out_folder=out_folder.joinpath(args.model),
-                  name=args.model,
-                  labels=labs,
-                  units=uts,
-                  show=True, save=True, subfolder=False,
-                  figsize=c.get_size_inches()[0],
-                  samples=samples,
-                  bounds=d_bounds,
-                  median_label='DPGMM',
-                  levels=[0.5, 0.68, 0.9, 0.95],
-                  )
+        plot_multidim([density],
+                      out_folder=out_folder.joinpath(args.model),
+                      name=args.model,
+                      labels=labs,
+                      units=uts,
+                      show=True, save=True, subfolder=False,
+                      figsize=c.get_size_inches()[0],
+                      samples=samples,
+                      bounds=d_bounds,
+                      median_label='DPGMM',
+                      levels=[0.5, 0.68, 0.9, 0.95],
+                      )
 
 
 if __name__ == "__main__":
