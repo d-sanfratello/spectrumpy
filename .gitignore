@@ -4,7 +4,7 @@
 /spectrumpy/mhspectrasampler/__pycache__/
 /spectrumpy/bayes_inference/__pycache__/
 /spectrumpy/core/__pycache__/
-/spectrumpy/pipelines/__pycache__/
+/spectrumpy/pipelines/__pycache__/*
 /__pycache__/
 /script.py
 .idea
