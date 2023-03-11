@@ -302,8 +302,8 @@ class Spectrum:
         with open(filename, 'w') as f:
             json.dump(s, f)
 
-    @classmethod
-    def load_info(cls, filename):
+    @staticmethod
+    def load_info(filename):
         with open(filename, 'r') as fjson:
             dictjson = json.load(fjson)
 
