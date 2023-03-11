@@ -171,6 +171,7 @@ class Spectrum:
 
         fig = plt.figure(*args)
         ax = fig.gca()
+        plt.grid(axis='both', which='major')
         ax.grid(axis='both', which='major')
 
         if 'title' in kwargs.keys():
