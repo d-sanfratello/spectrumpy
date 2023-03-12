@@ -32,6 +32,7 @@ scripts = [
     'sp-show-spectrum=spectrumpy.pipelines.show_spectrum:main',
     'sp-simulate-spectrum=spectrumpy.pipelines.simulate_spectrum:main',
     'sp-calibrate=spectrumpy.pipelines.calibrate_lines:main',
+    'sp-show-calibrated=spectrumpy.pipelines.show_calibrated_spectrum:main'
 ]
 pymodules = [
     'spectrumpy/pipelines/show_image',
@@ -43,6 +44,7 @@ pymodules = [
     'spectrumpy/pipelines/show_spectrum',
     'spectrumpy/pipelines/simulate_spectrum',
     'spectrumpy/pipelines/calibrate_lines',
+    'spectrumpy/pipelines/show_calibrated_spectrum'
 ]
 
 setup(
