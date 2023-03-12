@@ -28,8 +28,9 @@ class Spectrum:
         self._info['uncalib spectrum'] = np.copy(self.spectrum)
 
     def show(self,
-             model=None, x=None,
-             show=False, save=True, name='./spectrum_show.pdf',
+             model=None,
+             show=False, save=True,
+             name=None,
              legend=False,
              calibration=True,
              overlay_pixel=False,
@@ -38,8 +39,6 @@ class Spectrum:
              label=None,
              model_label=None,
              *args, **kwargs):
-        # FIXME: low cohesion? try splitting in a part only with spectrum
-        #  and another only with calibration.
 
         fig = plt.figure(*args)
         ax = fig.gca()
@@ -49,76 +48,155 @@ class Spectrum:
 
         ax.grid()
 
-        if calibration and self.calibration is not None:
-            x_clb = np.linspace(0, len(self.spectrum) - 1, len(self.spectrum))
-            x_clb = self.calibration(x_clb)
-            ax.plot(x_clb, self.spectrum,
-                    linestyle='solid', color='black', linewidth=0.5,
-                    label=label)
+        if calibration:
+            fig = self._show_calibrated(
+                fig,
+                model=model,
+                overlay_pixel=overlay_pixel,
+                overlay_spectrum=overlay_spectrum,
+                inverted_overlay=inverted_overlay,
+                label=label,
+                model_label=model_label,
+                **kwargs
+            )
+
+            if name is None:
+                name = './spectrum_calibrated_show.pdf'
         else:
-            ax.plot(self.spectrum,
-                    linestyle='solid', color='black', linewidth=0.5,
-                    label=label)
+            fig = self._show(
+                fig,
+                model=model,
+                label=label,
+                model_label=model_label,
+                **kwargs
+            )
+
+            if name is None:
+                name = './spectrum_show.pdf',
+
+        if legend:
+            ax.legend(loc='best')
+
+        if save:
+            fig.savefig(name)
+        if show:
+            plt.show()
+
+        plt.close()
+
+    def _show(self,
+              fig,
+              model=None,
+              label=None,
+              model_label=None,
+              **kwargs):
+
+        ax = fig.gca()
+
+        x = np.linspace(0, len(self.spectrum) - 1, len(self.spectrum))
+        ax.plot(x, self.spectrum,
+                linestyle='solid', color='black', linewidth=0.5,
+                label=label)
 
         if model is not None:
-            if calibration and self.calibration is not None:
-                x_clb = self.calibration(x)
-            else:
-                x_clb = x
-
             if hasattr(model, '__iter__') and \
                     isinstance(model[0], Spectrum):
                 for mdl, label in zip(model, model_label):
                     sp = mdl.spectrum
-                    ax.plot(x_clb, sp,
+                    ax.plot(x, sp,
                             linestyle='dashed', linewidth=0.5,
-                            label=label
-                            )
+                            label=label)
             elif hasattr(model, '__iter__') \
                     and not hasattr(model[0], '__call__'):
                 model = np.asarray(model)
                 l, m, h = np.percentile(model, [5, 50, 95], axis=0)
 
-                ax.plot(x_clb, m, lw=0.5, color='r')
-                ax.fill_between(x_clb, l, h, facecolor='red', alpha=0.5)
+                ax.plot(x, m, lw=0.5, color='r')
+                ax.fill_between(x, l, h, facecolor='red', alpha=0.5)
             elif hasattr(model, '__iter__') \
                     and hasattr(model[0], '__call__'):
                 for mdl in model:
-                    ax.plot(x_clb, mdl(x),
+                    ax.plot(x, mdl(x),
                             linestyle='dashed', linewidth=0.5,
                             label=mdl.__name__)
             else:
-                ax.plot(x_clb, model(x),
+                ax.plot(x, model(x),
                         linestyle='solid', color='red', linewidth=0.5)
 
         if 'xlim' in kwargs.keys():
             ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
-        elif calibration and self.calibration is not None:
-            ax.set_xlim(x_clb.min(), x_clb.max())
         else:
             ax.set_xlim(0, len(self.spectrum)-1)
 
         if 'ylim' in kwargs.keys():
             ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
 
-        if calibration and self.calibration is not None:
-            ax.set_xlabel(f"[{self._info['calib units']}]")
+        ax.set_xlabel(r'[px]')
+
+        return fig
+
+    def _show_calibrated(self,
+                         fig,
+                         model=None,
+                         overlay_pixel=False,
+                         overlay_spectrum=None,
+                         inverted_overlay=False,
+                         label=None,
+                         model_label=None,
+                         **kwargs):
+        if self.calibration is None:
+            raise AttributeError(
+                "Unknown calibration."
+            )
+
+        ax = fig.gca()
+
+        x_clb = np.linspace(0, len(self.spectrum) - 1, len(self.spectrum))
+        x_clb = self.calibration(x_clb)
+        ax.plot(x_clb, self.spectrum,
+                linestyle='solid', color='black', linewidth=0.5,
+                label=label)
+
+        if model is not None:
+            if hasattr(model, '__iter__') and \
+                    isinstance(model[0], Spectrum):
+                for mdl, label in zip(model, model_label):
+                    sp = mdl.spectrum
+                    ax.plot(x_clb, sp,
+                            linestyle='dashed', linewidth=0.5,
+                            label=label)
+            elif hasattr(model, '__iter__') \
+                    and hasattr(model[0], '__call__'):
+                for mdl in model:
+                    ax.plot(x_clb, mdl(x_clb),
+                            linestyle='dashed', linewidth=0.5,
+                            label=mdl.__name__)
+            else:
+                ax.plot(x_clb, model(x_clb),
+                        linestyle='solid', color='red', linewidth=0.5)
+
+        if 'xlim' in kwargs.keys():
+            ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
         else:
-            ax.set_xlabel(r'[px]')
+            ax.set_xlim(x_clb.min(), x_clb.max())
 
-        if calibration and self.calibration is not None:
-            dset = self.dataset
-            for lam in dset.lines:
-                ax.axvline(lam,
-                           ymin=0, ymax=1, linewidth=0.5, color='navy',
-                           linestyle='dashed')
-                ax.text(lam, self.spectrum.max() / 2,
-                        f'{dset.names[lam]}',
-                        rotation=90, verticalalignment='center',
-                        horizontalalignment='left',
-                        size=7.5, color='navy')
+        if 'ylim' in kwargs.keys():
+            ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
 
-        if overlay_pixel and calibration and self.calibration is not None:
+        ax.set_xlabel(f"[{self._info['calib units']}]")
+
+        dset = self.dataset
+        for lam in dset.lines:
+            ax.axvline(lam,
+                       ymin=0, ymax=1, linewidth=0.5, color='navy',
+                       linestyle='dashed')
+            ax.text(lam, self.spectrum.max() / 2,
+                    f'{dset.names[lam]}',
+                    rotation=90, verticalalignment='center',
+                    horizontalalignment='left',
+                    size=7.5, color='navy')
+
+        if overlay_pixel:
             fig.subplots_adjust(bottom=0.2)
             ax2 = ax.twiny()
 
@@ -145,15 +223,7 @@ class Spectrum:
 
             ax2.set_visible(True)
 
-        if legend:
-            ax.legend(loc='best')
-
-        if save:
-            fig.savefig(name)
-        if show:
-            plt.show()
-
-        plt.close()
+        return fig
 
     @staticmethod
     def show_calibration_fit(px, lam, s_px, s_lam=None,
