@@ -135,9 +135,12 @@ def main():
         medians.append(q_50)
     medians = np.asarray(medians)
 
+    model_name = args.model
+    if model_name is None:
+        model_name = Path(os.getcwd())
     with h5py.File(
-            Path(args.out_folder).joinpath(
-                args.model,
+            Path(out_folder).joinpath(
+                model_name,
                 'median_params.h5'
             ), 'w') as f:
         f.create_dataset('params', data=medians)
