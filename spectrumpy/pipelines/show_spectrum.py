@@ -23,7 +23,7 @@ def main():
 
     spectrum.show(
         show=True,
-        save=False,
+        save=True,
         legend=False,
         calibration=False
     )
