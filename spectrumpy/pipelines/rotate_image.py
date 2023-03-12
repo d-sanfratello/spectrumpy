@@ -7,7 +7,10 @@ from spectrumpy.io import parse_image_path
 
 
 def main():
-    parser = ag.OptionParser()
+    parser = ag.ArgumentParser(
+        prog='sp-rotate',
+        description='Script to rotate the spectrum of a given angle.'
+    )
     parser.add_argument("image_path")
     parser.add_argument("-I", "--image", type=int, dest='image',
                         default=0,

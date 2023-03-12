@@ -4,7 +4,10 @@ from spectrumpy.io import parse_image_path
 
 
 def main():
-    parser = ag.ArgumentParser()
+    parser = ag.ArgumentParser(
+        prog='sp-show-image',
+        description='This script shows a fits or h5 image of a spectrum.',
+    )
     parser.add_argument('image_path')
     parser.add_argument("-l", "--lamp", action='store_true', dest='is_lamp',
                         default=False,

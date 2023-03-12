@@ -12,7 +12,11 @@ from spectrumpy.io import parse_data_path, parse_bounds
 
 
 def main():
-    parser = ag.ArgumentParser()
+    parser = ag.ArgumentParser(
+        prog='sp-find-angle',
+        description='This script performs an inference on some given data to '
+                    'find the correct rotation angle for a spectrum image.',
+    )
     parser.add_argument('data_path')
     parser.add_argument("-o", "--output-folder", dest="out_folder",
                         default=Path(os.getcwd()),

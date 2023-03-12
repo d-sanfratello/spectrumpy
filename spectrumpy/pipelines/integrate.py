@@ -9,7 +9,11 @@ from spectrumpy.io import parse_image_path
 
 
 def main():
-    parser = ag.ArgumentParser()
+    parser = ag.ArgumentParser(
+        prog='sp-integrate',
+        description='This script integrates a spectrum image and saves a '
+                    'Spectrum object.',
+    )
     parser.add_argument('image_path')
     parser.add_argument("-I", "--image", type=int, dest='image',
                         default=0,

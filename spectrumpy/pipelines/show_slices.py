@@ -5,7 +5,10 @@ from spectrumpy.io import parse_image_path
 
 
 def main():
-    parser = ag.ArgumentParser()
+    parser = ag.ArgumentParser(
+        prog='sp-show-slices',
+        description='This script shows some given slices of a spectrum image.',
+    )
     parser.add_argument("image_path")
     parser.add_argument("-I", "--image", type=int, dest='image',
                         default=0,

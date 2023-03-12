@@ -9,10 +9,14 @@ from spectrumpy.bayes_inference import models as mod
 
 
 def main():
-    parser = ag.ArgumentParser()
-    parser.add_argment("-o", "--output-folder", dest="out_folder",
-                       default=None,
-                       help="The folder where to save the simulated lines.")
+    parser = ag.ArgumentParser(
+        prog='sp-simulate-spectrum',
+        description='This script simulates a dataset of spectral lines for '
+                    'testing purposes.',
+    )
+    parser.add_argument("-o", "--output-folder", dest="out_folder",
+                        default=None,
+                        help="The folder where to save the simulated lines.")
     args = parser.parse_args()
 
     out_folder = args.out_folder

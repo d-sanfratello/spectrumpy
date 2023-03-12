@@ -4,7 +4,11 @@ from spectrumpy.io import parse_spectrum_path
 
 
 def main():
-    parser = ag.ArgumentParser()
+    parser = ag.ArgumentParser(
+        prog='sp-show-spectrum',
+        description='This script shows a plot with the integrated spectrum '
+                    'from an image.',
+    )
     parser.add_argument('spectrum_path')
     parser.add_argument("-L", "--limits", action='store_true',
                         dest='show_limits',
