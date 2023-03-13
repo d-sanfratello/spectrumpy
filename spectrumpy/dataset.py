@@ -3,11 +3,14 @@ import warnings
 
 
 class Dataset:
-    def __init__(self, lines, px, errpx, errlines, names):
+    def __init__(self, lines, px, errpx, errlines, names=None):
         self.px = np.asarray(px)
         self.errpx = np.asarray(errpx)
         self.lines = np.asarray(lines)
         self.errlines = np.asarray(errlines)
+
+        if names is None:
+            names = [f'{l:.1f}' for l in self.lines]
 
         if isinstance(names, dict):
             self.names = names.copy()
