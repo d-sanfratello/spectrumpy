@@ -68,10 +68,9 @@ def main():
         units=args.units
     )
 
-    # FIXME: check spectrum.py script
     spectrum.show(
         model=None,
-        show=True, save=True,
+        show=True, save=(not args.overlay),
         name=out_folder.joinpath(
             mod_name + '_calibrated_spectrum.pdf'
         ),
