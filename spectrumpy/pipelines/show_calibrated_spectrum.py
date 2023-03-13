@@ -35,10 +35,6 @@ def main():
                         action="store_true", default=False,
                         help="If this flag is set, a second axis with pixels "
                              "is displayed below the main axis.")
-    parser.add_argument("--invert-overlay", dest="invert_overlay",
-                        action="store_true", default=False,
-                        help="If this flag is set, with '--overlay-pixel', "
-                             "the second axis is swapped.")
 
     args = parser.parse_args()
 
@@ -83,7 +79,6 @@ def main():
         calibration=True,
         overlay_pixel=args.overlay,
         overlay_spectrum=None,
-        inverted_overlay=False,
         label=None,
         model_label=None,
     )
