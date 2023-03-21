@@ -31,8 +31,11 @@ def main():
                         help="The bounds for the pixels.")
     parser.add_argument("-B", "--model-bounds", dest="mod_bounds",
                         required=True,
-                        help="The bounds for the model parameters. Write "
-                             "from highest to lowest order.")
+                        help="The bounds for the model parameters. If Write "
+                             "from highest to lowest order. If you provide a "
+                             "prior distribution, just add the bounds for "
+                             "the new parameters, the old ones will be set "
+                             "from the density file.")
     parser.add_argument("-P", "--prior", dest="prior_density",
                         help="The path to a 'figaro'-compatible .json file "
                              "containing a pdf posterior from another sample "
@@ -55,6 +58,11 @@ def main():
     parser.add_argument("--error-scale", dest="error_scale", type=float,
                         default=None,
                         help="A number to scale the errorbars in the plot.")
+    parser.add_argument("--set-sigma", dest="sigma_prior", type=float,
+                        default=5,
+                        help="The number of sigmas to be taken around each "
+                             "datapoint as a reasonable sampling interval. "
+                             "Default is 5.")
     args = parser.parse_args()
 
     bounds, mod_bounds = parse_bounds(args)
@@ -63,7 +71,10 @@ def main():
 
     prior_density = None
     if args.prior_density is not None:
-        prior_density = load_density(Path(args.prior_density))
+        prior_density = load_density(Path(args.prior_density))[0]
+        prior_bounds = [list(b) for b in prior_density.bounds]
+
+        mod_bounds += prior_bounds
 
     out_folder = args.out_folder
     if out_folder is None:
@@ -73,6 +84,7 @@ def main():
     fit_model = CalibrationFit(
         px, dpx, l, dl,
         model=args.model,
+        sigma_prior=args.sigma_prior,
         x_bounds=bounds, mod_bounds=mod_bounds,
         prior=prior_density
     )
@@ -84,7 +96,7 @@ def main():
             nlive=1000,  # 1000
             maxmcmc=5000,  # 5000
             nensemble=1,
-            output=out_folder.joinpath(args.model)
+            output=out_folder.joinpath(args.model),
         )
         work.run()
         post = work.posterior_samples.ravel()
@@ -109,9 +121,12 @@ def main():
             units = f'[nm / px^{deg}]'
         labels.append(f'{par} {units}')
 
+    labs = [lab.split(' ')[0] for lab in labels]
+    uts = [lab.split('[')[1][:-1] for lab in labels]
+
     c = corner.corner(
         samples,
-        labels=labels,
+        labels=[f'${l_}$ [${u_}$]' for l_, u_ in zip(labs, uts)],
         quantiles=[0.16, 0.5, 0.84],
         use_math_text=True,
     )
@@ -183,8 +198,8 @@ def main():
         ]
         for _, b in enumerate(d_bounds):
             length = b[1] - b[0]
-            b[0] -= length * 1e-2
-            b[1] += length * 1e-2
+            b[0] -= length * 1e-1
+            b[1] += length * 1e-1
 
         prior = get_priors(d_bounds, samples, probit=True)
 
@@ -195,9 +210,6 @@ def main():
                      folder=out_folder.joinpath(args.model),
                      name=f'params_posterior_density_{args.model}',
                      ext='json')
-
-        labs = [lab.split(' ')[0] for lab in labels]
-        uts = [lab.split(' ')[1][1:-1] for lab in labels]
 
         plot_multidim([density],
                       out_folder=out_folder.joinpath(args.model),
