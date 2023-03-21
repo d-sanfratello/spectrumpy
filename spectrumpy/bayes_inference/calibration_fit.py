@@ -11,11 +11,14 @@ class CalibrationFit(Model):
     def __init__(self,
                  px, dpx, l, dl,
                  model,
+                 sigma_prior=None,
                  x_bounds=None, mod_bounds=None, prior=None):
         self.px = px
         self.dpx = dpx
         self.l = l
         self.dl = dl
+
+        self.sigma_prior = sigma_prior
 
         self.n_pts = len(px)
 
@@ -33,9 +36,9 @@ class CalibrationFit(Model):
             )
 
         if x_bounds is None:
-            c_level = 5
             x_bounds = [
-                [d - c_level * s, d + c_level * s]
+                [d - self.sigma_prior * s,
+                 d + self.sigma_prior * s]
                 for d, s in zip(self.px, self.dpx)
             ]
         else:
@@ -54,13 +57,13 @@ class CalibrationFit(Model):
             if self.prior is None:
                 log_p = 0.
             else:
-                par = param[len(self.px) + 1:]
-                log_p_old = self.prior.logpdf(np.asarray(par))
+                par = param.values[len(self.px) + 1:]
+
+                log_p_old = self.prior.fast_logpdf(par)
                 new_bounds = self.mod_bounds[0]
                 log_new = - np.log(new_bounds[1] - new_bounds[0])
 
                 log_p = log_p_old + log_new
-
         return log_p
 
     def log_likelihood(self, param):
