@@ -104,3 +104,10 @@ def parse_bounds(args):
         mod_bounds = eval(args.mod_bounds)
 
     return x_bounds, mod_bounds
+
+
+def parse_tentative(args):
+    if args.tentative:
+        return 100, 500
+    else:
+        return 1000, 5000
