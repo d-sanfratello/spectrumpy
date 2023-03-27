@@ -65,7 +65,8 @@ def main():
                          show=True,
                          save=False,
                          label=name,
-                         model_label=labels)
+                         model_label=labels,
+                         calibration=False)
 
 
 if __name__ == "__main__":
