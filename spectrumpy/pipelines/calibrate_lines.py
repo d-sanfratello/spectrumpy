@@ -15,7 +15,7 @@ from pathlib import Path
 from spectrumpy.core import Spectrum
 from spectrumpy.bayes_inference import CalibrationFit
 from spectrumpy.bayes_inference import models as mod
-from spectrumpy.io import parse_data_path, parse_bounds
+from spectrumpy.io import parse_data_path, parse_bounds, parse_tentative
 
 
 def main():
@@ -63,6 +63,11 @@ def main():
                         help="The number of sigmas to be taken around each "
                              "datapoint as a reasonable sampling interval. "
                              "Default is 5.")
+    parser.add_argument("--tentative", action='store_true',
+                        dest='tentative', default=False,
+                        help="if this flag is set, the script performs "
+                             "only a tentative fit using a smaller number of "
+                             "samples.")
     args = parser.parse_args()
 
     bounds, mod_bounds = parse_bounds(args)
@@ -81,6 +86,8 @@ def main():
         out_folder = os.getcwd()
     out_folder = Path(out_folder)
 
+    nlive, maxmcmc = parse_tentative(args)
+
     fit_model = CalibrationFit(
         px, dpx, l, dl,
         model=args.model,
@@ -93,8 +100,8 @@ def main():
         work = cpnest.CPNest(
             fit_model,
             verbose=2,
-            nlive=1000,  # 1000
-            maxmcmc=5000,  # 5000
+            nlive=nlive,  # 1000
+            maxmcmc=maxmcmc,  # 5000
             nensemble=1,
             output=out_folder.joinpath(args.model),
         )
