@@ -38,6 +38,7 @@ class Spectrum:
              overlay_spectrum=None,
              label=None,
              model_label=None,
+             show_lines=True,
              *args, **kwargs):
 
         fig = plt.figure(*args)
@@ -57,6 +58,7 @@ class Spectrum:
                     overlay_spectrum=overlay_spectrum,
                     label=label,
                     model_label=model_label,
+                    show_lines=show_lines,
                     **kwargs
                 )
 
@@ -70,6 +72,7 @@ class Spectrum:
                     overlay_spectrum=overlay_spectrum,
                     label=label,
                     model_label=model_label,
+                    show_lines=show_lines,
                     **kwargs
                 )
 
@@ -153,6 +156,8 @@ class Spectrum:
                          model=None,
                          label=None,
                          model_label=None,
+                         overlay_spectrum=None,
+                         show_lines=True,
                          **kwargs):
         if self.calibration is None:
             raise AttributeError(
@@ -196,16 +201,21 @@ class Spectrum:
 
         ax.set_xlabel(f"[{self._info['calib units']}]")
 
-        dset = self.dataset
-        for lam in dset.lines:
-            ax.axvline(lam,
-                       ymin=0, ymax=1, linewidth=0.5, color='navy',
-                       linestyle='dashed')
-            # ax.text(lam, self.spectrum.max() / 2,
-            #         f'{dset.names[lam]}',
-            #         rotation=90, verticalalignment='center',
-            #         horizontalalignment='left',
-            #         size=7.5, color='navy')
+        if show_lines:
+            dset = self.dataset
+            for lam in dset.lines:
+                ax.axvline(lam,
+                           ymin=0, ymax=1, linewidth=0.5, color='navy',
+                           linestyle='dashed')
+                # ax.text(lam, self.spectrum.max() / 2,
+                #         f'{dset.names[lam]}',
+                #         rotation=90, verticalalignment='center',
+                #         horizontalalignment='left',
+                #         size=7.5, color='navy')
+
+        if overlay_spectrum is not None:
+            ax.plot(x_clb, overlay_spectrum.spectrum,
+                    linestyle='solid', color='orange', linewidth=0.5)
 
         return fig
 
@@ -215,6 +225,7 @@ class Spectrum:
                            overlay_spectrum=None,
                            label=None,
                            model_label=None,
+                           show_lines=True,
                            **kwargs):
         if self.calibration is None:
             raise AttributeError(
@@ -259,18 +270,19 @@ class Spectrum:
 
         ax.set_xlabel("[px]")
 
-        dset = self.dataset
-        for lam in dset.px:
-            ax.axvline(lam,
-                       ymin=0, ymax=1, linewidth=0.5, color='navy',
-                       linestyle='dashed')
+        if show_lines:
+            dset = self.dataset
+            for lam in dset.px:
+                ax.axvline(lam,
+                           ymin=0, ymax=1, linewidth=0.5, color='navy',
+                           linestyle='dashed')
+
+        if overlay_spectrum is not None:
+            ax.plot(px, overlay_spectrum.spectrum,
+                    linestyle='solid', color='orange', linewidth=0.5)
 
         fig.subplots_adjust(bottom=0.3)
         ax2 = ax.twiny()
-
-        if overlay_spectrum is not None:
-            ax.plot(px, overlay_spectrum,
-                    linestyle='solid', color='orange', linewidth=0.5)
 
         tick_formatter = PxFormatter(ax2, px, self.calibration)
         ax2.xaxis.set_major_formatter(tick_formatter)
@@ -365,6 +377,16 @@ class Spectrum:
 
         plt.close()
 
+    def normalize(self):
+        min_sp = np.min(self.spectrum)
+        max_sp = np.max(self.spectrum)
+        weight = max_sp - min_sp
+
+        normalized = (self.spectrum - min_sp) / weight
+
+        return Spectrum(int_spectrum=normalized, info=self.info)
+
+    # TODO: check below this
     def smooth(self, size, lamp):
         if self.info['lamp']:
             raise ValueError("It makes no sense to smooth the lamp.")
@@ -401,7 +423,7 @@ class Spectrum:
 
         self.calibration = (calibration, pars)
 
-        self._info['calibration'] = calibration
+        self._info['calibration'] = self.calibration
         self._info['calib units'] = units
 
     def save_info(self, filename='./info.json'):
