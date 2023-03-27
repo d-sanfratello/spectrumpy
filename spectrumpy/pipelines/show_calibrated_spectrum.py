@@ -19,7 +19,6 @@ def main():
                         help="The folder containing the calibration model "
                              "parameters.")
     parser.add_argument("-l", "--lines", dest="lines", default=None,
-                        required=True,
                         help="The path to a file containing lines to be "
                              "plotted over the spectrum.")
     parser.add_argument("-n", "--line-names", dest='line_names', default=None,
@@ -35,6 +34,10 @@ def main():
                         action="store_true", default=False,
                         help="If this flag is set, a second axis with pixels "
                              "is displayed below the main axis.")
+    parser.add_argument('--overlay-spectrum', dest='added_spectrum',
+                        default=None,
+                        help="a spectrum to overlay to the current spectrum "
+                             "dataset.")
 
     args = parser.parse_args()
 
@@ -47,7 +50,20 @@ def main():
         args,
         data_name='spectrum_path'
     )
-    px, dpx, l, dl = parse_data_path(args, data_name='lines')
+    add_spectrum = None
+    if args.added_spectrum is not None:
+        add_spectrum = parse_spectrum_path(
+            args,
+            data_name='added_spectrum'
+        )
+    if args.lines is not None:
+        px, dpx, l, dl = parse_data_path(args, data_name='lines')
+
+        spectrum.assign_dataset(
+            px=px, errpx=dpx,
+            lines=l, errlines=dl,
+            names=args.line_names
+        )
 
     with h5py.File(Path(args.calibration).joinpath(
             'median_params.h5'), 'r') as f:
@@ -56,17 +72,32 @@ def main():
     mod_name = mod.available_models[len(calib_parameters) - 2]
     calibration = mod.models[mod_name]
 
-    spectrum.assign_dataset(
-        px=px, errpx=dpx,
-        lines=l, errlines=dl,
-        names=args.line_names
-    )
-
     spectrum.assign_calibration(
         calibration=calibration,
         pars=calib_parameters,
         units=args.units
     )
+
+    if add_spectrum is not None:
+        if args.lines is not None:
+            add_spectrum.assign_dataset(
+                px=px, errpx=dpx,
+                lines=l, errlines=dl,
+                names=args.line_names
+            )
+
+        add_spectrum.assign_calibration(
+            calibration=calibration,
+            pars=calib_parameters,
+            units=args.units
+        )
+
+        spectrum = spectrum.normalize()
+        add_spectrum = add_spectrum.normalize()
+
+    show_lines = True
+    if args.lines is None:
+        show_lines = False
 
     spectrum.show(
         model=None,
@@ -77,9 +108,10 @@ def main():
         legend=False,
         calibration=True,
         overlay_pixel=args.overlay,
-        overlay_spectrum=None,
+        overlay_spectrum=add_spectrum,
         label=None,
         model_label=None,
+        show_lines=show_lines
     )
 
 
