@@ -8,7 +8,7 @@ import argparse as ag
 from pathlib import Path
 
 from spectrumpy.bayes_inference import RotationFit
-from spectrumpy.io import parse_data_path, parse_bounds
+from spectrumpy.io import parse_data_path, parse_bounds, parse_tentative
 
 
 def main():
@@ -38,6 +38,11 @@ def main():
                         required=True,
                         help="The bounds for the model parameters. Write "
                              "from highest to lowest order.")
+    parser.add_argument("--tentative", action='store_true',
+                        dest='tentative', default=False,
+                        help="if this flag is set, the script performs "
+                             "only a tentative fit using a smaller number of "
+                             "samples.")
     args = parser.parse_args()
 
     bounds, mod_bounds = parse_bounds(args)
@@ -48,6 +53,8 @@ def main():
     )
 
     if not args.postprocess:
+        nlive, maxmcmc = parse_tentative(args)
+
         fit_model = RotationFit(
             x, dx, y, dy, x_bounds=bounds, mod_bounds=mod_bounds
         )
@@ -55,8 +62,8 @@ def main():
         work = cpnest.CPNest(
             fit_model,
             verbose=2,
-            nlive=1000,  # 1000
-            maxmcmc=5000,  # 5000
+            nlive=nlive,  # 1000
+            maxmcmc=maxmcmc,  # 5000
             nensemble=1,
             output=Path(args.out_folder).joinpath('rotation_fit')
         )
