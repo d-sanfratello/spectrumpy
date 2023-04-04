@@ -34,7 +34,9 @@ scripts = [
     'sp-calibrate=spectrumpy.pipelines.calibrate_lines:main',
     'sp-show-calibrated=spectrumpy.pipelines.show_calibrated_spectrum:main',
     'sp-average-image=spectrumpy.pipelines.average_image:main',
-    'sp-correct-image=spectrumpy.pipelines.correct_image:main'
+    'sp-correct-image=spectrumpy.pipelines.correct_image:main',
+    'sp-velocity-resolution=spectrumpy.pipelines'
+    '.evaluate_velocity_resolution:main',
 ]
 pymodules = [
     'spectrumpy/pipelines/show_image',
@@ -49,6 +51,7 @@ pymodules = [
     'spectrumpy/pipelines/show_calibrated_spectrum',
     'spectrumpy/pipelines/average_image',
     'spectrumpy/pipelines/correct_image',
+    'spectrumpy/pipelines/evaluate_velocity_resolution'
 ]
 
 setup(
