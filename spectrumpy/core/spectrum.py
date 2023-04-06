@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import warnings
 
-from matplotlib.ticker import Formatter
 from scipy.ndimage import median_filter
 
 from spectrumpy.dataset import Dataset
@@ -34,7 +33,6 @@ class Spectrum:
              name=None,
              legend=False,
              calibration=True,
-             overlay_pixel=False,
              overlay_spectrum=None,
              label=None,
              model_label=None,
@@ -50,34 +48,18 @@ class Spectrum:
         ax.grid()
 
         if calibration:
-            if overlay_pixel:
-                fig = self._show_with_overlay(
-                    fig,
-                    model=model,
-                    overlay_pixel=overlay_pixel,
-                    overlay_spectrum=overlay_spectrum,
-                    label=label,
-                    model_label=model_label,
-                    show_lines=show_lines,
-                    **kwargs
-                )
+            fig = self._show_calibrated(
+                fig,
+                model=model,
+                overlay_spectrum=overlay_spectrum,
+                label=label,
+                model_label=model_label,
+                show_lines=show_lines,
+                **kwargs
+            )
 
-                if name is None:
-                    name = './spectrum_doubleaxis_show.pdf'
-            else:
-                fig = self._show_calibrated(
-                    fig,
-                    model=model,
-                    overlay_pixel=overlay_pixel,
-                    overlay_spectrum=overlay_spectrum,
-                    label=label,
-                    model_label=model_label,
-                    show_lines=show_lines,
-                    **kwargs
-                )
-
-                if name is None:
-                    name = './spectrum_calibrated_show.pdf'
+            if name is None:
+                name = './spectrum_calibrated_show.pdf'
         else:
             fig = self._show(
                 fig,
@@ -109,7 +91,11 @@ class Spectrum:
 
         ax = fig.gca()
 
-        x = np.linspace(0, len(self.spectrum) - 1, len(self.spectrum))
+        calib_model, calib_pars = self.calibration
+
+        x = np.linspace(0,
+                        len(self.spectrum) - 1,
+                        len(self.spectrum))
         ax.plot(x, self.spectrum,
                 linestyle='solid', color='black', linewidth=0.5,
                 label=label)
@@ -167,8 +153,11 @@ class Spectrum:
         calib_model, calib_pars = self.calibration
         ax = fig.gca()
 
-        x_clb = np.linspace(0, len(self.spectrum) - 1, len(self.spectrum))
-        x_clb = calib_model(x_clb, *calib_pars)
+        px = np.linspace(0,
+                         len(self.spectrum) - 1,
+                         len(self.spectrum))
+        x_clb = calib_model(px, *calib_pars)
+
         ax.plot(x_clb, self.spectrum,
                 linestyle='solid', color='black', linewidth=0.5,
                 label=label)
@@ -207,99 +196,17 @@ class Spectrum:
                 ax.axvline(lam,
                            ymin=0, ymax=1, linewidth=0.5, color='navy',
                            linestyle='dashed')
-                # ax.text(lam, self.spectrum.max() / 2,
-                #         f'{dset.names[lam]}',
-                #         rotation=90, verticalalignment='center',
-                #         horizontalalignment='left',
-                #         size=7.5, color='navy')
 
         if overlay_spectrum is not None:
-            ax.plot(x_clb, overlay_spectrum.spectrum,
+            calib_model2, calib_pars2 = overlay_spectrum.calibration
+
+            x_clb2 = np.linspace(0,
+                                 len(overlay_spectrum.spectrum) - 1,
+                                 len(overlay_spectrum.spectrum))
+            x_clb2 = calib_model2(x_clb2, *calib_pars2)
+
+            ax.plot(x_clb2, overlay_spectrum.spectrum,
                     linestyle='solid', color='orange', linewidth=0.5)
-
-        return fig
-
-    def _show_with_overlay(self,
-                           fig,
-                           model=None,
-                           overlay_spectrum=None,
-                           label=None,
-                           model_label=None,
-                           show_lines=True,
-                           **kwargs):
-        if self.calibration is None:
-            raise AttributeError(
-                "Unknown calibration."
-            )
-
-        calib_model, calib_pars = self.calibration
-
-        ax = fig.gca()
-
-        px = np.linspace(0, len(self.spectrum) - 1, len(self.spectrum))
-        x_clb = calib_model(px, *calib_pars)
-        ax.plot(px, self.spectrum,
-                linestyle='solid', color='black', linewidth=0.5,
-                label=label, picker=True)
-
-        if model is not None:
-            if hasattr(model, '__iter__') and \
-                    isinstance(model[0], Spectrum):
-                for mdl, label in zip(model, model_label):
-                    sp = mdl.spectrum
-                    ax.plot(px, sp,
-                            linestyle='dashed', linewidth=0.5,
-                            label=label)
-            elif hasattr(model, '__iter__') \
-                    and hasattr(model[0], '__call__'):
-                for mdl in model:
-                    ax.plot(px, mdl(px),
-                            linestyle='dashed', linewidth=0.5,
-                            label=mdl.__name__)
-            else:
-                ax.plot(px, model(px),
-                        linestyle='solid', color='red', linewidth=0.5)
-
-        if 'xlim' in kwargs.keys():
-            ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
-        else:
-            ax.set_xlim(px.min(), px.max())
-
-        if 'ylim' in kwargs.keys():
-            ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
-
-        ax.set_xlabel("[px]")
-
-        if show_lines:
-            dset = self.dataset
-            for lam in dset.px:
-                ax.axvline(lam,
-                           ymin=0, ymax=1, linewidth=0.5, color='navy',
-                           linestyle='dashed')
-
-        if overlay_spectrum is not None:
-            ax.plot(px, overlay_spectrum.spectrum,
-                    linestyle='solid', color='orange', linewidth=0.5)
-
-        fig.subplots_adjust(bottom=0.3)
-        ax2 = ax.twiny()
-
-        tick_formatter = PxFormatter(ax2, px, self.calibration)
-        ax2.xaxis.set_major_formatter(tick_formatter)
-
-        ax2.set_xlabel(f"[{self._info['calib units']}]")
-
-        ax2.spines["bottom"].set_position(("axes", -0.2))
-        ax2.spines["bottom"].set_edgecolor('blue')
-
-        ax2.xaxis.label.set_color('blue')
-        ax2.xaxis.set_label_position("bottom")
-
-        ax2.tick_params(which='both', axis='x', colors='blue', rotation=45)
-        ax2.xaxis.set_ticks_position("bottom")
-
-        ax.locator_params(nbins=15)
-        ax2.set_visible(True)
 
         return fig
 
@@ -426,6 +333,24 @@ class Spectrum:
         self._info['calibration'] = self.calibration
         self._info['calib units'] = units
 
+    def apply_shift(self, shift=0):
+        if shift > 0:
+            self.spectrum = np.concatenate(
+                (np.zeros(shift), self.spectrum[:-shift])
+            )
+        elif shift < 0:
+            shift = -shift
+            self.spectrum = self.spectrum[shift - 1:]
+
+    @classmethod
+    def even_spectra(cls, spectrum1, spectrum2):
+        diff = len(spectrum1.spectrum) - len(spectrum2.spectrum)
+
+        if diff > 0:  # sp1 is longer than sp2
+            spectrum2.spectrum = spectrum2.spectrum[0:-diff]
+        elif diff < 0:  # sp1 is shorter than sp2
+            spectrum1.spectrum = spectrum1.spectrum[0:diff]
+
     def save_info(self, filename='./info.json'):
         # FIXME: check this
     
@@ -513,6 +438,7 @@ class Spectrum:
         ref_calibration = calib_model(x, *calib_pars)
 
         x_cmp = np.linspace(0, len(spectrum.int) - 1, len(spectrum.int))
+        # FIXME: This is wrong
         cmp_calibration = spectrum.calibration(x_cmp)
 
         if len(ref_calibration) == len(cmp_calibration) and np.all(
@@ -554,24 +480,3 @@ class Spectrum:
     @property
     def info(self):
         return self._info
-
-
-class PxFormatter(Formatter):
-    def __init__(self,
-                 ax,
-                 px_range=None,
-                 calibration=None):
-        super().__init__()
-        self.set_axis(ax)
-        self.min = px_range.min()
-        self.width = px_range.max() - px_range.min()
-
-        self.model, self.pars = calibration
-
-    def __call__(self, x, pos=None):
-        vmin, vmax = self.axis.get_view_interval()
-
-        x_ = x * self.width + self.min
-        l = self.model(x_, *self.pars)
-
-        return f"{l:.2f}"
