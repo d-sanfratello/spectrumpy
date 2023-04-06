@@ -1,12 +1,91 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 from scipy.ndimage import median_filter
 
 
 class CalibratedSpectrum:
-    def __init__(self, wavelength, spectrum):
+    def __init__(self, wavelength, spectrum, units):
         self.wl = wavelength
         self.sp = spectrum
+        self.units = units
+
+    def show(self,
+             model=None,
+             show=False, save=True,
+             name=None,
+             legend=False,
+             overlay_spectrum=None,
+             label=None,
+             lines=None,
+             *args, **kwargs):
+
+        fig = plt.figure(*args)
+        ax = fig.gca()
+
+        if 'title' in kwargs.keys():
+            ax.set_title(kwargs['title'])
+
+        ax.grid()
+
+        fig = self._show_calibrated(
+            fig,
+            model=model,
+            overlay_spectrum=overlay_spectrum,
+            label=label,
+            lines=lines,
+            **kwargs
+        )
+
+        if name is None:
+            name = './spectrum_calibrated_show.pdf'
+
+        if legend:
+            ax.legend(loc='best')
+
+        if save:
+            fig.savefig(name)
+        if show:
+            plt.show()
+
+        plt.close()
+
+    def _show_calibrated(self,
+                         fig,
+                         label=None,
+                         overlay_spectrum=None,
+                         lines=None,
+                         **kwargs):
+
+        ax = fig.gca()
+        ax.plot(self.wl, self.sp,
+                linestyle='solid', color='black', linewidth=0.5,
+                label=label)
+
+        if 'xlim' in kwargs.keys():
+            ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
+        else:
+            ax.set_xlim(self.wl.min(), self.wl.max())
+
+        if 'ylim' in kwargs.keys():
+            ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
+
+        ax.set_xlabel(f"[{self.units}]")
+
+        if lines is not None:
+            for lam in lines:
+                ax.axvline(lam,
+                           ymin=0, ymax=1, linewidth=0.5, color='navy',
+                           linestyle='dashed')
+
+        if overlay_spectrum is not None:
+            ax.plot(
+                overlay_spectrum.wl,
+                overlay_spectrum.sp,
+                linestyle='solid', color='orange', linewidth=0.5
+            )
+
+        return fig
 
     def normalize(self):
         min_sp = np.min(self.spectrum)

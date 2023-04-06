@@ -27,6 +27,13 @@ def main():
                         default=None,
                         help="a spectrum to overlay to the current spectrum "
                              "dataset.")
+    parser.add_argument('--labels', dest="labels", default=None,
+                        help="A comma-separated-string containing the labels "
+                             "for the spectrum(a).")
+    parser.add_argument("--normalized", dest='normalized',
+                        action='store_true', default=False,
+                        help="if set, this flag normalizes the spectra "
+                             "before plotting them.")
     args = parser.parse_args()
 
     spectrum = parse_spectrum_path(
@@ -49,7 +56,8 @@ def main():
         units='px'
     )
 
-    calibration = False
+    # calibration = False
+    add_spectrum = None
     if args.added_spectrum is not None:
         add_spectrum = parse_spectrum_path(
             args,
@@ -65,19 +73,30 @@ def main():
 
         Spectrum.even_spectra(spectrum, add_spectrum)
 
-        spectrum = spectrum.normalize()
-        add_spectrum = add_spectrum.normalize()
+        if args.normalized:
+            spectrum = spectrum.normalize()
+            add_spectrum = add_spectrum.normalize()
 
-        calibration = True
+        cal_add_spectrum = add_spectrum.return_calibrated()
+        cal_spectrum = spectrum.return_calibrated()
 
-    spectrum.show(
-        show=True,
-        save=False,
-        legend=False,
-        calibration=calibration,
-        overlay_spectrum=add_spectrum,
-        show_lines=False
-    )
+        cal_spectrum.show(
+            show=True, save=False,
+            legend=True,
+            overlay_spectrum=cal_add_spectrum,
+            label=None,
+        )
+
+        # calibration = True
+    else:
+        spectrum.show(
+            show=True,
+            save=False,
+            legend=False,
+            # calibration=calibration,
+            overlay_spectrum=add_spectrum,
+            show_lines=False
+        )
 
 
 if __name__ == "__main__":

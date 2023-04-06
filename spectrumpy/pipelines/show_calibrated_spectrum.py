@@ -47,6 +47,13 @@ def main():
                         default=None,
                         help="a spectrum to overlay to the current spectrum "
                              "dataset.")
+    parser.add_argument('--labels', dest="labels", default=None,
+                        help="A comma-separated-string containing the labels "
+                             "for the spectrum(a).")
+    parser.add_argument("--normalized", dest='normalized',
+                        action='store_true', default=False,
+                        help="if set, this flag normalizes the spectra "
+                             "before plotting them.")
 
     args = parser.parse_args()
 
@@ -69,7 +76,7 @@ def main():
         px, dpx, l, dl = parse_data_path(args, data_name='lines')
 
         spectrum.assign_dataset(
-            px=px, errpx=dpx,
+            px=px + args.shift, errpx=dpx,
             lines=l, errlines=dl,
             names=args.line_names
         )
@@ -89,13 +96,6 @@ def main():
     )
 
     if add_spectrum is not None:
-        if args.lines is not None:
-            add_spectrum.assign_dataset(
-                px=px, errpx=dpx,
-                lines=l, errlines=dl,
-                names=args.line_names
-            )
-
         add_spectrum.apply_shift(args.shift2)
         add_spectrum.assign_calibration(
             calibration=calibration,
@@ -105,25 +105,27 @@ def main():
 
         Spectrum.even_spectra(spectrum, add_spectrum)
 
-        spectrum = spectrum.normalize()
-        add_spectrum = add_spectrum.normalize()
+        if args.normalized:
+            spectrum = spectrum.normalize()
+            add_spectrum = add_spectrum.normalize()
 
-    show_lines = True
-    if args.lines is None:
-        show_lines = False
+        cal_add_spectrum = add_spectrum.return_calibrated()
 
-    spectrum.show(
-        model=None,
+    cal_spectrum = spectrum.return_calibrated()
+
+    lines = None
+    if args.lines is not None:
+        lines = spectrum.dataset
+
+    cal_spectrum.show(
         show=True, save=True,
         name=out_folder.joinpath(
             mod_name + '_calibrated_spectrum.pdf'
         ),
-        legend=False,
-        calibration=True,
-        overlay_spectrum=add_spectrum,
+        legend=True,
+        overlay_spectrum=cal_add_spectrum,
         label=None,
-        model_label=None,
-        show_lines=show_lines
+        lines=lines
     )
 
 
