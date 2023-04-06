@@ -27,7 +27,6 @@ def main():
                         default=0,
                         help="the shift, in pixels, to be applies to the "
                              "secondary spectrum, if shown.")
-    # TODO: insert usage for cut option.
     parser.add_argument('-c', '--cut', dest='cut', default=None,
                         help="a list containing the number of pixels to be "
                              "cut from the spectra from each side.")
@@ -72,6 +71,11 @@ def main():
             args,
             data_name='added_spectrum'
         )
+
+    cut = None
+    if args.cut is not None:
+        cut = eval(args.cut)
+
     if args.lines is not None:
         px, dpx, l, dl = parse_data_path(args, data_name='lines')
 
@@ -114,10 +118,14 @@ def main():
             add_spectrum = add_spectrum.normalize()
 
         cal_add_spectrum = add_spectrum.return_calibrated()
+        if cut is not None:
+            cal_add_spectrum = cal_add_spectrum.cut(*cut)
     else:
         cal_add_spectrum = None
 
     cal_spectrum = spectrum.return_calibrated()
+    if cut is not None:
+        cal_spectrum = cal_spectrum.cut(*cut)
 
     lines = None
     if args.lines is not None:
