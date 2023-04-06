@@ -5,6 +5,7 @@ import h5py
 
 from pathlib import Path
 
+from spectrumpy.core import Spectrum
 from spectrumpy.io import parse_spectrum_path, parse_data_path
 from spectrumpy.bayes_inference import models as mod
 
@@ -18,6 +19,18 @@ def main():
     parser.add_argument('calibration',
                         help="The folder containing the calibration model "
                              "parameters.")
+    parser.add_argument('-s', '--shift', dest='shift', type=int,
+                        default=0,
+                        help="the shift, in pixels, to be applied to the "
+                             "main spectrum.")
+    parser.add_argument('-S', '--shift2', dest='shift2', type=int,
+                        default=0,
+                        help="the shift, in pixels, to be applies to the "
+                             "secondary spectrum, if shown.")
+    # TODO: insert usage for cut option.
+    parser.add_argument('-c', '--cut', dest='cut', default=None,
+                        help="a list containing the number of pixels to be "
+                             "cut from the spectra from each side.")
     parser.add_argument("-l", "--lines", dest="lines", default=None,
                         help="The path to a file containing lines to be "
                              "plotted over the spectrum.")
@@ -30,10 +43,6 @@ def main():
                              "command.")
     parser.add_argument("-u", "--units", dest="units", default='nm',
                         help="The units of the calibrated wavelengths.")
-    parser.add_argument("--overlay-pixel", dest="overlay",
-                        action="store_true", default=False,
-                        help="If this flag is set, a second axis with pixels "
-                             "is displayed below the main axis.")
     parser.add_argument('--overlay-spectrum', dest='added_spectrum',
                         default=None,
                         help="a spectrum to overlay to the current spectrum "
@@ -72,6 +81,7 @@ def main():
     mod_name = mod.available_models[len(calib_parameters) - 2]
     calibration = mod.models[mod_name]
 
+    spectrum.apply_shift(args.shift)
     spectrum.assign_calibration(
         calibration=calibration,
         pars=calib_parameters,
@@ -86,11 +96,14 @@ def main():
                 names=args.line_names
             )
 
+        add_spectrum.apply_shift(args.shift2)
         add_spectrum.assign_calibration(
             calibration=calibration,
             pars=calib_parameters,
             units=args.units
         )
+
+        Spectrum.even_spectra(spectrum, add_spectrum)
 
         spectrum = spectrum.normalize()
         add_spectrum = add_spectrum.normalize()
@@ -101,13 +114,12 @@ def main():
 
     spectrum.show(
         model=None,
-        show=True, save=(not args.overlay),
+        show=True, save=True,
         name=out_folder.joinpath(
             mod_name + '_calibrated_spectrum.pdf'
         ),
         legend=False,
         calibration=True,
-        overlay_pixel=args.overlay,
         overlay_spectrum=add_spectrum,
         label=None,
         model_label=None,
