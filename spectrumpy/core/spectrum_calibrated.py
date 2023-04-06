@@ -16,7 +16,7 @@ class CalibratedSpectrum:
              name=None,
              legend=False,
              overlay_spectrum=None,
-             label=None,
+             labels=None,
              lines=None,
              *args, **kwargs):
 
@@ -28,14 +28,9 @@ class CalibratedSpectrum:
 
         ax.grid()
 
-        fig = self._show_calibrated(
-            fig,
-            model=model,
-            overlay_spectrum=overlay_spectrum,
-            label=label,
-            lines=lines,
-            **kwargs
-        )
+        fig = self._show_calibrated(fig, labels=labels,
+                                    overlay_spectrum=overlay_spectrum,
+                                    lines=lines, model=model, **kwargs)
 
         if name is None:
             name = './spectrum_calibrated_show.pdf'
@@ -52,15 +47,21 @@ class CalibratedSpectrum:
 
     def _show_calibrated(self,
                          fig,
-                         label=None,
+                         labels=None,
                          overlay_spectrum=None,
                          lines=None,
                          **kwargs):
 
+        label1, label2 = None, None
+        if labels is not None:
+            label1 = labels[0]
+            if len(labels) == 2:
+                label2 = labels[1]
+
         ax = fig.gca()
         ax.plot(self.wl, self.sp,
                 linestyle='solid', color='black', linewidth=0.5,
-                label=label)
+                label=label1)
 
         if 'xlim' in kwargs.keys():
             ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
@@ -82,7 +83,8 @@ class CalibratedSpectrum:
             ax.plot(
                 overlay_spectrum.wl,
                 overlay_spectrum.sp,
-                linestyle='solid', color='orange', linewidth=0.5
+                linestyle='solid', color='orange', linewidth=0.5,
+                label=label2
             )
 
         return fig

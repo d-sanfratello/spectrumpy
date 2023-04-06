@@ -28,11 +28,8 @@ class Spectrum:
              show=False, save=True,
              name=None,
              legend=False,
-             # calibration=True,
-             overlay_spectrum=None,
              label=None,
              model_label=None,
-             show_lines=True,
              *args, **kwargs):
 
         fig = plt.figure(*args)
