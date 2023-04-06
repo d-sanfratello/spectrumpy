@@ -56,7 +56,6 @@ def main():
         units='px'
     )
 
-    # calibration = False
     add_spectrum = None
     if args.added_spectrum is not None:
         add_spectrum = parse_spectrum_path(
@@ -86,14 +85,11 @@ def main():
             overlay_spectrum=cal_add_spectrum,
             label=None,
         )
-
-        # calibration = True
     else:
         spectrum.show(
             show=True,
             save=False,
             legend=False,
-            # calibration=calibration,
             overlay_spectrum=add_spectrum,
             show_lines=False
         )

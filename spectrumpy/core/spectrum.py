@@ -43,20 +43,6 @@ class Spectrum:
 
         ax.grid()
 
-        # if calibration:
-        #     fig = self._show_calibrated(
-        #         fig,
-        #         model=model,
-        #         overlay_spectrum=overlay_spectrum,
-        #         label=label,
-        #         model_label=model_label,
-        #         show_lines=show_lines,
-        #         **kwargs
-        #     )
-        #
-        #     if name is None:
-        #         name = './spectrum_calibrated_show.pdf'
-        # else:
         fig = self._show(
             fig,
             model=model,
@@ -132,79 +118,6 @@ class Spectrum:
         ax.set_xlabel(r'[px]')
 
         return fig
-
-    # def _show_calibrated(self,
-    #                      fig,
-    #                      model=None,
-    #                      label=None,
-    #                      model_label=None,
-    #                      overlay_spectrum=None,
-    #                      show_lines=True,
-    #                      **kwargs):
-    #     if self.calibration is None:
-    #         raise AttributeError(
-    #             "Unknown calibration."
-    #         )
-    #
-    #     calib_model, calib_pars = self.calibration
-    #     ax = fig.gca()
-    #
-    #     px = np.linspace(0,
-    #                      len(self.spectrum) - 1,
-    #                      len(self.spectrum))
-    #     x_clb = calib_model(px, *calib_pars)
-    #
-    #     ax.plot(x_clb, self.spectrum,
-    #             linestyle='solid', color='black', linewidth=0.5,
-    #             label=label)
-    #
-    #     if model is not None:
-    #         if hasattr(model, '__iter__') and \
-    #                 isinstance(model[0], Spectrum):
-    #             for mdl, label in zip(model, model_label):
-    #                 sp = mdl.spectrum
-    #                 ax.plot(x_clb, sp,
-    #                         linestyle='dashed', linewidth=0.5,
-    #                         label=label)
-    #         elif hasattr(model, '__iter__') \
-    #                 and hasattr(model[0], '__call__'):
-    #             for mdl in model:
-    #                 ax.plot(x_clb, mdl(x_clb),
-    #                         linestyle='dashed', linewidth=0.5,
-    #                         label=mdl.__name__)
-    #         else:
-    #             ax.plot(x_clb, model(x_clb),
-    #                     linestyle='solid', color='red', linewidth=0.5)
-    #
-    #     if 'xlim' in kwargs.keys():
-    #         ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
-    #     else:
-    #         ax.set_xlim(x_clb.min(), x_clb.max())
-    #
-    #     if 'ylim' in kwargs.keys():
-    #         ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
-    #
-    #     ax.set_xlabel(f"[{self._info['calib units']}]")
-    #
-    #     if show_lines:
-    #         dset = self.dataset
-    #         for lam in dset.lines:
-    #             ax.axvline(lam,
-    #                        ymin=0, ymax=1, linewidth=0.5, color='navy',
-    #                        linestyle='dashed')
-    #
-    #     if overlay_spectrum is not None:
-    #         calib_model2, calib_pars2 = overlay_spectrum.calibration
-    #
-    #         x_clb2 = np.linspace(0,
-    #                              len(overlay_spectrum.spectrum) - 1,
-    #                              len(overlay_spectrum.spectrum))
-    #         x_clb2 = calib_model2(x_clb2, *calib_pars2)
-    #
-    #         ax.plot(x_clb2, overlay_spectrum.spectrum,
-    #                 linestyle='solid', color='orange', linewidth=0.5)
-    #
-    #     return fig
 
     @staticmethod
     def show_calibration_fit(px, lam, s_px, s_lam=None,
