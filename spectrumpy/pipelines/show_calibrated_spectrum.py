@@ -53,6 +53,12 @@ def main():
                         action='store_true', default=False,
                         help="if set, this flag normalizes the spectra "
                              "before plotting them.")
+    parser.add_argument("--calibrated", dest='calibrated', default=False,
+                        action='store_true',
+                        help="if set, this flag treats the given spectrum as "
+                             "already calibrated.")
+    #FIXME: Quando non si passa --calibrated è in grado di aprire il file lo
+    # stesso. Magari rinominare il dataset?
 
     args = parser.parse_args()
 
@@ -76,7 +82,7 @@ def main():
     if args.cut is not None:
         cut = eval(args.cut)
 
-    if args.lines is not None:
+    if not args.calibrated and args.lines is not None:
         px, dpx, l, dl = parse_data_path(args, data_name='lines')
 
         spectrum.assign_dataset(
@@ -89,43 +95,55 @@ def main():
     if args.labels is not None:
         labels = args.labels.split(',')
 
-    with h5py.File(Path(args.calibration).joinpath(
-            'median_params.h5'), 'r') as f:
-        calib_parameters = f['params'][:]
+    if not args.calibrated:
+        with h5py.File(Path(args.calibration).joinpath(
+                'median_params.h5'), 'r') as f:
+            calib_parameters = f['params'][:]
 
-    mod_name = mod.available_models[len(calib_parameters) - 2]
-    calibration = mod.models[mod_name]
+        mod_name = mod.available_models[len(calib_parameters) - 2]
+        calibration = mod.models[mod_name]
 
-    spectrum.apply_shift(args.shift)
-    spectrum.assign_calibration(
-        calibration=calibration,
-        pars=calib_parameters,
-        units=args.units
-    )
-
-    if add_spectrum is not None:
-        add_spectrum.apply_shift(args.shift2)
-        add_spectrum.assign_calibration(
+        spectrum.apply_shift(args.shift)
+        spectrum.assign_calibration(
             calibration=calibration,
             pars=calib_parameters,
             units=args.units
         )
 
-        Spectrum.even_spectra(spectrum, add_spectrum)
+        if add_spectrum is not None:
+            add_spectrum.apply_shift(args.shift2)
+            add_spectrum.assign_calibration(
+                calibration=calibration,
+                pars=calib_parameters,
+                units=args.units
+            )
 
-        if args.normalized:
-            spectrum = spectrum.normalize()
-            add_spectrum = add_spectrum.normalize()
+            Spectrum.even_spectra(spectrum, add_spectrum)
 
-        cal_add_spectrum = add_spectrum.return_calibrated()
+            if args.normalized:
+                spectrum = spectrum.normalize()
+                add_spectrum = add_spectrum.normalize()
+
+            cal_add_spectrum = add_spectrum.return_calibrated()
+            if cut is not None:
+                cal_add_spectrum = cal_add_spectrum.cut(*cut)
+        else:
+            cal_add_spectrum = None
+
+        cal_spectrum = spectrum.return_calibrated()
         if cut is not None:
-            cal_add_spectrum = cal_add_spectrum.cut(*cut)
+            cal_spectrum = cal_spectrum.cut(*cut)
     else:
+        cal_spectrum = spectrum
         cal_add_spectrum = None
 
-    cal_spectrum = spectrum.return_calibrated()
-    if cut is not None:
-        cal_spectrum = cal_spectrum.cut(*cut)
+        if add_spectrum is not None:
+            cal_add_spectrum = add_spectrum
+            if cut is not None:
+                cal_add_spectrum = cal_add_spectrum.cut(*cut)
+
+        if cut is not None:
+            cal_spectrum = cal_spectrum.cut(*cut)
 
     lines = None
     if args.lines is not None:
@@ -134,7 +152,7 @@ def main():
     cal_spectrum.show(
         show=True, save=True,
         name=out_folder.joinpath(
-            mod_name + '_calibrated_spectrum.pdf'
+            'calibrated_spectrum.pdf'
         ),
         legend=True,
         overlay_spectrum=cal_add_spectrum,
