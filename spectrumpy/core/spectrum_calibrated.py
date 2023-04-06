@@ -98,7 +98,8 @@ class CalibratedSpectrum:
 
         return CalibratedSpectrum(
             wavelength=np.asarray(self.wl),
-            spectrum=np.asarray(normalized)
+            spectrum=np.asarray(normalized),
+            units=self.units
         )
 
     def smooth(self, size):
@@ -106,7 +107,8 @@ class CalibratedSpectrum:
 
         return CalibratedSpectrum(
             wavelength=np.asarray(self.wl),
-            spectrum=np.asarray(smoothed)
+            spectrum=np.asarray(smoothed),
+            units=self.units
         )
 
     def cut(self, low=None, high=None):
@@ -114,7 +116,8 @@ class CalibratedSpectrum:
 
         return CalibratedSpectrum(
             wavelength=np.asarray(self.wl[good_idx]),
-            spectrum=np.asarray(self.sp[good_idx])
+            spectrum=np.asarray(self.sp[good_idx]),
+            units=self.units
         )
 
     @classmethod
