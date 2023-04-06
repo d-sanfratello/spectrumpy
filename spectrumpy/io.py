@@ -4,8 +4,8 @@ import numpy as np
 from astropy.io import fits
 from pathlib import Path
 
-from spectrumpy.core.spectrum_image import SpectrumImage
-from spectrumpy.core.spectrum import Spectrum
+from spectrumpy.core import SpectrumImage
+from spectrumpy.core import Spectrum, CalibratedSpectrum
 
 
 class SpectrumPath:
@@ -61,13 +61,26 @@ def parse_spectrum_path(args,
                         wrong_type_msg="Invalid file extension.",
                         **kwargs):
     spectrum_path = Path(getattr(args, data_name))
-    if spectrum_path.suffix.lower() in ['.h5', '.hdf5']:
-        with h5py.File(spectrum_path, 'r') as f:
-            spectrum_data = np.asarray(f['spectrum'])
 
-        spectrum = Spectrum(spectrum_data)
+    if hasattr(args, 'calibrated') and args.calibrated:
+        with h5py.File(spectrum_path, 'r') as f:
+            wl = np.asarray(f['wavelength'])
+            sp = np.asarray(f['spectrum'])
+            units = np.asarray(f['units'])
+
+        spectrum = CalibratedSpectrum(
+            wavelength=wl,
+            spectrum=sp,
+            units=units
+        )
     else:
-        raise ValueError(wrong_type_msg)
+        if spectrum_path.suffix.lower() in ['.h5', '.hdf5']:
+            with h5py.File(spectrum_path, 'r') as f:
+                spectrum_data = np.asarray(f['spectrum'])
+
+            spectrum = Spectrum(spectrum_data)
+        else:
+            raise ValueError(wrong_type_msg)
 
     return spectrum
 
