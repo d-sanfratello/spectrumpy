@@ -81,6 +81,10 @@ def main():
             names=args.line_names
         )
 
+    labels = None
+    if args.labels is not None:
+        labels = args.labels.split(',')
+
     with h5py.File(Path(args.calibration).joinpath(
             'median_params.h5'), 'r') as f:
         calib_parameters = f['params'][:]
@@ -110,6 +114,8 @@ def main():
             add_spectrum = add_spectrum.normalize()
 
         cal_add_spectrum = add_spectrum.return_calibrated()
+    else:
+        cal_add_spectrum = None
 
     cal_spectrum = spectrum.return_calibrated()
 
@@ -124,7 +130,7 @@ def main():
         ),
         legend=True,
         overlay_spectrum=cal_add_spectrum,
-        label=None,
+        labels=labels,
         lines=lines
     )
 

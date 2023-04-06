@@ -45,6 +45,10 @@ def main():
         print(f"Spectrum size: {spectrum.spectrum.shape[0]}")
         exit(0)
 
+    labels = None
+    if args.labels is not None:
+        labels = args.labels.split(',')
+
     from spectrumpy.bayes_inference import models as mod
     calib_model = mod.models['linear']
     calib_pars = [1, 0]
@@ -83,13 +87,14 @@ def main():
             show=True, save=False,
             legend=True,
             overlay_spectrum=cal_add_spectrum,
-            label=None,
+            labels=labels,
         )
     else:
         spectrum.show(
             show=True,
             save=False,
             legend=False,
+            labels=labels,
             overlay_spectrum=add_spectrum,
             show_lines=False
         )
