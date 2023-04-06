@@ -23,6 +23,7 @@ with open("requirements.txt") as requires_file:
     requirements = requires_file.read().split("\n")
 
 scripts = [
+    'sp-help=spectrumpy.pipelines.help:main',
     'sp-show-image=spectrumpy.pipelines.show_image:main',
     'sp-find-angle=spectrumpy.pipelines.find_rotation_angle:main',
     'sp-rotate=spectrumpy.pipelines.rotate_image:main',
@@ -39,6 +40,7 @@ scripts = [
     '.evaluate_velocity_resolution:main',
 ]
 pymodules = [
+    'spectrumpy/pipelines/help',
     'spectrumpy/pipelines/show_image',
     'spectrumpy/pipelines/find_rotation_angle',
     'spectrumpy/pipelines/rotate_image',
