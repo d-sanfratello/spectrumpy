@@ -1,12 +1,8 @@
-import json
 import matplotlib.pyplot as plt
 import numpy as np
-import warnings
 
-from scipy.ndimage import median_filter
-
+from spectrumpy.core import CalibratedSpectrum
 from spectrumpy.dataset import Dataset
-from spectrumpy import function_models as fs
 
 
 class Spectrum:
@@ -293,28 +289,6 @@ class Spectrum:
 
         return Spectrum(int_spectrum=normalized, info=self.info)
 
-    # TODO: check below this
-    def smooth(self, size, lamp):
-        if self.info['lamp']:
-            raise ValueError("It makes no sense to smooth the lamp.")
-        if not isinstance(lamp, Spectrum):
-            raise TypeError("`lamp` must be a `Spectrum` instance.")
-
-        smoothed = median_filter(self.spectrum, size=size)
-
-        return Spectrum(smoothed, self.info)
-
-    def weight(self, smoothed, lamp):
-        if not self.info['lamp']:
-            warnings.warn("You are weighting a spectrum containing actual "
-                          "data. Proceed with caution.")
-        if not isinstance(lamp, Spectrum):
-            raise TypeError("`lamp` must be a `Spectrum` instance.")
-
-        weighted = lamp.spectrum / smoothed
-
-        return Spectrum(weighted, self.info)
-
     def assign_dataset(self, dataset=None, *,
                        lines=None, px=None, errpx=None, errlines=None,
                        names=None):
@@ -333,6 +307,20 @@ class Spectrum:
         self._info['calibration'] = self.calibration
         self._info['calib units'] = units
 
+    def return_calibration(self):
+        if self.calibration is None:
+            raise AttributeError(
+                "Unknown calibration."
+            )
+
+        calib_model, calib_pars = self.calibration
+        px = np.linspace(0,
+                         len(self.spectrum) - 1,
+                         len(self.spectrum))
+        x_clb = calib_model(px, *calib_pars)
+
+        return CalibratedSpectrum(x_clb, self.spectrum)
+
     def apply_shift(self, shift=0):
         if shift > 0:
             self.spectrum = np.concatenate(
@@ -350,132 +338,6 @@ class Spectrum:
             spectrum2.spectrum = spectrum2.spectrum[0:-diff]
         elif diff < 0:  # sp1 is shorter than sp2
             spectrum1.spectrum = spectrum1.spectrum[0:diff]
-
-    def save_info(self, filename='./info.json'):
-        # FIXME: check this
-    
-        dict_ = self.info.copy()
-        dict_['original'] = None
-
-        calibration = dict_.pop('calibration')
-        dict_['calib order'] = calibration.order
-        dict_['calib pars'] = calibration.pars
-
-        dataset = dict_.pop('dataset')
-        dataset_dict = dataset.__dict__.copy()
-        for key, value in dataset_dict.items():
-            if isinstance(value, np.ndarray):
-                value = value.tolist()
-            dict_[key] = value
-
-        dict_['uncalib spectrum'] = dict_['uncalib spectrum'].tolist()
-
-        crop_x = dict_.pop('crop_x')
-        crop_y = dict_.pop('crop_y')
-
-        if not isinstance(crop_x, slice):
-            crop_x = slice(*crop_x)
-        if not isinstance(crop_y, slice):
-            crop_y = slice(*crop_y)
-
-        dict_['crop_x'] = [crop_x.start, crop_x.stop, crop_x.step]
-        dict_['crop_y'] = [crop_y.start, crop_y.stop, crop_y.step]
-
-        s = json.dumps(dict_, indent=4)
-
-        with open(filename, 'w') as f:
-            json.dump(s, f)
-
-    @staticmethod
-    def load_info(filename):
-        with open(filename, 'r') as fjson:
-            dictjson = json.load(fjson)
-
-        dict_ = json.loads(dictjson)
-
-        order = dict_.pop('calib order')
-        pars = dict_.pop('calib pars')
-
-        px = dict_.pop('px')
-        errpx = dict_.pop('errpx')
-        lines = dict_.pop('lines')
-        errlines = dict_.pop('errlines')
-
-        names = dict_.pop('names')
-        str_keys = list(names.keys())
-        for key in str_keys:
-            new_key = float(key)
-            label = names.pop(key)
-            names[new_key] = label
-
-        crop_x = dict_.pop('crop_x')
-        crop_y = dict_.pop('crop_y')
-
-        uncalib_spectrum = dict_.pop('uncalib spectrum')
-
-        info_dict = dict_.copy()
-
-        info_dict['crop_x'] = slice(*crop_x)
-        info_dict['crop_y'] = slice(*crop_y)
-
-        info_dict['uncalib spectrum'] = np.array(uncalib_spectrum)
-
-        f_gen = fs.FunctionGenerator(order=order, pars=pars)
-        info_dict['calibration'] = f_gen.assign()
-        info_dict['dataset'] = Dataset(px=px, errpx=errpx,
-                                       lines=lines, errlines=errlines,
-                                       names=names)
-
-        return info_dict
-
-    def compare(self, spectrum):
-        # FIXME: low cohesion
-        calib_model, calib_pars = self.calibration
-
-        eq_spectrum = spectrum.int / spectrum.int.max() * self.int.max()
-
-        x = np.linspace(0, len(self.int) - 1, len(self.int))
-        ref_calibration = calib_model(x, *calib_pars)
-
-        x_cmp = np.linspace(0, len(spectrum.int) - 1, len(spectrum.int))
-        # FIXME: This is wrong
-        cmp_calibration = spectrum.calibration(x_cmp)
-
-        if len(ref_calibration) == len(cmp_calibration) and np.all(
-                ref_calibration == eq_spectrum):
-            return self.int / eq_spectrum
-
-        spectra_ratio = np.zeros(len(ref_calibration), dtype=np.float64)
-
-        for _, pt in enumerate(ref_calibration):
-            if pt < cmp_calibration.min():
-                low_x = cmp_calibration[0]
-                upp_x = cmp_calibration[1]
-
-                low_y = eq_spectrum[0]
-                upp_y = eq_spectrum[1]
-            elif cmp_calibration.min() <= pt < cmp_calibration.max():
-                low_x = cmp_calibration[cmp_calibration <= pt]
-                idx_low = len(low_x)
-                low_x = low_x.max()
-                low_y = eq_spectrum[idx_low - 1]
-
-                upp_x = cmp_calibration[cmp_calibration > pt].min()
-                upp_y = eq_spectrum[idx_low]
-            elif pt >= cmp_calibration.max():
-                low_x = cmp_calibration[-2]
-                upp_x = cmp_calibration[-1]
-
-                low_y = eq_spectrum[-2]
-                upp_y = eq_spectrum[-1]
-
-            l_approx = fs.Linear((upp_y - low_y) / (upp_x - low_x),
-                                 low_y - (upp_y - low_y) / (
-                                             upp_x - low_x) * low_x)
-
-            spectra_ratio[_] = self.int[_] / l_approx(pt)
-
-        return spectra_ratio
 
     @property
     def info(self):

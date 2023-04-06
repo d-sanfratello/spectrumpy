@@ -38,4 +38,9 @@ class CalibratedSpectrum:
 
     @classmethod
     def compare(cls, spectrum1, spectrum2):
-        return spectrum1 / spectrum2
+        if not np.all(spectrum1 == spectrum2):
+            raise ValueError(
+                "Spectra must have the same calibration."
+            )
+
+        return spectrum1.wl, spectrum1 / spectrum2
