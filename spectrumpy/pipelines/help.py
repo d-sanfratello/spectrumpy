@@ -44,6 +44,8 @@ def main():
                              "the spectrum over the model.")
     parser.add_argument("--show-calibrated", action='store_true',
                         help="shows a calibrated spectrum.")
+    parser.add_argument("--save-calibrated", action='store_true',
+                        help="saves the calibrated spectrum into a file.")
     parser.add_argument("--velocity-resolution", action='store_true',
                         help="given the distance between two lines and their "
                              "region, it estimates the radial velocity "
