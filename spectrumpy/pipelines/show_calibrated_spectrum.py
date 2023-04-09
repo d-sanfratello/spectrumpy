@@ -53,10 +53,6 @@ def main():
                         action='store_true', default=False,
                         help="if set, this flag normalizes the spectra "
                              "before plotting them.")
-    parser.add_argument("--calibrated", dest='calibrated', default=False,
-                        action='store_true',
-                        help="if set, this flag treats the given spectrum as "
-                             "already calibrated.")
     args = parser.parse_args()
 
     calibrated = False
