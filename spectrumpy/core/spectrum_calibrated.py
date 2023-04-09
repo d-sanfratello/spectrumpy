@@ -90,11 +90,11 @@ class CalibratedSpectrum:
         return fig
 
     def normalize(self):
-        min_sp = np.min(self.spectrum)
-        max_sp = np.max(self.spectrum)
+        min_sp = np.min(self.sp)
+        max_sp = np.max(self.sp)
         weight = max_sp - min_sp
 
-        normalized = (self.spectrum - min_sp) / weight
+        normalized = (self.sp - min_sp) / weight
 
         return CalibratedSpectrum(
             wavelength=np.asarray(self.wl),

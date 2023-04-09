@@ -5,7 +5,7 @@ import h5py
 
 from pathlib import Path
 
-from spectrumpy.core import Spectrum
+from spectrumpy.core import Spectrum, CalibratedSpectrum
 from spectrumpy.io import parse_spectrum_path, parse_data_path
 from spectrumpy.bayes_inference import models as mod
 
@@ -16,7 +16,7 @@ def main():
         description='Script to show the spectrum with calibrated wavelengths.'
     )
     parser.add_argument('spectrum_path')
-    parser.add_argument('calibration',
+    parser.add_argument('calibration', nargs='?',
                         help="The folder containing the calibration model "
                              "parameters.")
     parser.add_argument('-s', '--shift', dest='shift', type=int,
@@ -36,10 +36,10 @@ def main():
     parser.add_argument("-n", "--line-names", dest='line_names', default=None,
                         help="The names of the lines, if they are identified "
                              "by name.")
-    parser.add_argument("-o", "--output-folder", dest="out_folder",
+    parser.add_argument("-o", "--output", dest="out_file",
                         default=None,
-                        help="The folder where to save the output of this "
-                             "command.")
+                        help="The name of the file where to save the output "
+                             "of this command.")
     parser.add_argument("-u", "--units", dest="units", default='nm',
                         help="The units of the calibrated wavelengths.")
     parser.add_argument('--overlay-spectrum', dest='added_spectrum',
@@ -57,15 +57,14 @@ def main():
                         action='store_true',
                         help="if set, this flag treats the given spectrum as "
                              "already calibrated.")
-    #FIXME: Quando non si passa --calibrated è in grado di aprire il file lo
-    # stesso. Magari rinominare il dataset?
-
     args = parser.parse_args()
 
-    out_folder = args.out_folder
-    if out_folder is None:
-        out_folder = os.getcwd()
-    out_folder = Path(out_folder)
+    calibrated = False
+
+    out_file = args.out_file
+    if out_file is None:
+        out_file = Path(os.getcwd()).joinpath('calibrated.pdf')
+    out_file = Path(out_file)
 
     spectrum = parse_spectrum_path(
         args,
@@ -78,11 +77,14 @@ def main():
             data_name='added_spectrum'
         )
 
+    if isinstance(spectrum, CalibratedSpectrum):
+        calibrated = True
+
     cut = None
     if args.cut is not None:
         cut = eval(args.cut)
 
-    if not args.calibrated and args.lines is not None:
+    if not calibrated and args.lines is not None:
         px, dpx, l, dl = parse_data_path(args, data_name='lines')
 
         spectrum.assign_dataset(
@@ -95,7 +97,7 @@ def main():
     if args.labels is not None:
         labels = args.labels.split(',')
 
-    if not args.calibrated:
+    if not calibrated:
         with h5py.File(Path(args.calibration).joinpath(
                 'median_params.h5'), 'r') as f:
             calib_parameters = f['params'][:]
@@ -145,16 +147,20 @@ def main():
         if cut is not None:
             cal_spectrum = cal_spectrum.cut(*cut)
 
+        if args.normalized:
+            cal_spectrum = cal_spectrum.normalize()
+
+            if cal_add_spectrum is not None:
+                cal_add_spectrum = cal_add_spectrum.normalize()
+
     lines = None
     if args.lines is not None:
-        lines = spectrum.dataset
+        lines = spectrum.dataset.lines
 
     cal_spectrum.show(
-        show=True, save=True,
-        name=out_folder.joinpath(
-            'calibrated_spectrum.pdf'
-        ),
-        legend=True,
+        show=True, save=(args.out_file is not None),
+        name=out_file,
+        legend=(args.labels is not None),
         overlay_spectrum=cal_add_spectrum,
         labels=labels,
         lines=lines

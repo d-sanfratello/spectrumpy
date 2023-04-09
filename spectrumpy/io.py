@@ -62,25 +62,20 @@ def parse_spectrum_path(args,
                         **kwargs):
     spectrum_path = Path(getattr(args, data_name))
 
-    if hasattr(args, 'calibrated') and args.calibrated:
-        with h5py.File(spectrum_path, 'r') as f:
-            wl = np.asarray(f['wavelength'])
-            sp = np.asarray(f['spectrum'])
-            units = np.asarray(f['units'])
+    with h5py.File(spectrum_path, 'r') as f:
+        sp = np.asarray(f['spectrum']).astype(float).flatten()
 
-        spectrum = CalibratedSpectrum(
-            wavelength=wl,
-            spectrum=sp,
-            units=units
-        )
-    else:
-        if spectrum_path.suffix.lower() in ['.h5', '.hdf5']:
-            with h5py.File(spectrum_path, 'r') as f:
-                spectrum_data = np.asarray(f['spectrum'])
-
-            spectrum = Spectrum(spectrum_data)
+        try:
+            wl = np.asarray(f['wavelength']).astype(float).flatten()
+            units = np.asarray(f['units']).astype(str)
+        except KeyError:
+            spectrum = Spectrum(sp)
         else:
-            raise ValueError(wrong_type_msg)
+            spectrum = CalibratedSpectrum(
+                wavelength=wl,
+                spectrum=sp,
+                units=units
+            )
 
     return spectrum
 
