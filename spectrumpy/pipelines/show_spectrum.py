@@ -34,6 +34,10 @@ def main():
                         action='store_true', default=False,
                         help="if set, this flag normalizes the spectra "
                              "before plotting them.")
+    parser.add_argument("--inverted", dest='inverted',
+                        action='store_true', default=False,
+                        help="if set, the spectrum is shown with an inverted x"
+                             " axis.")
     args = parser.parse_args()
 
     spectrum = parse_spectrum_path(
@@ -84,8 +88,9 @@ def main():
         cal_spectrum = spectrum.return_calibrated()
 
         cal_spectrum.show(
-            show=True, save=False,
-            legend=True,
+            show=True,
+            save=False,
+            legend=(args.labels is not None),
             overlay_spectrum=cal_add_spectrum,
             labels=labels,
         )
@@ -96,7 +101,8 @@ def main():
             legend=False,
             labels=labels,
             overlay_spectrum=add_spectrum,
-            show_lines=False
+            show_lines=False,
+            inverted=args.inverted
         )
 
 

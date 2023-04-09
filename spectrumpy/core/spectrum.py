@@ -30,6 +30,7 @@ class Spectrum:
              legend=False,
              label=None,
              model_label=None,
+             inverted=False,
              *args, **kwargs):
 
         fig = plt.figure(*args)
@@ -45,6 +46,7 @@ class Spectrum:
             model=model,
             label=label,
             model_label=model_label,
+            inverted=inverted,
             **kwargs
         )
 
@@ -66,6 +68,7 @@ class Spectrum:
               model=None,
               label=None,
               model_label=None,
+              inverted=False,
               **kwargs):
 
         ax = fig.gca()
@@ -108,6 +111,10 @@ class Spectrum:
             ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
         else:
             ax.set_xlim(0, len(self.spectrum)-1)
+
+        if inverted:
+            lims = ax.get_xlim()
+            ax.set_xlim(lims[1], lims[0])
 
         if 'ylim' in kwargs.keys():
             ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
