@@ -73,8 +73,6 @@ class Spectrum:
 
         ax = fig.gca()
 
-        calib_model, calib_pars = self.calibration
-
         x = np.linspace(0,
                         len(self.spectrum) - 1,
                         len(self.spectrum))
