@@ -39,6 +39,8 @@ scripts = [
     'sp-velocity-resolution=spectrumpy.pipelines'
     '.evaluate_velocity_resolution:main',
     'sp-save-calibrated=spectrumpy.pipelines.save_calibrated_spectrum:main',
+    'sp-smooth=spectrumpy.pipelines.smooth_spectrum:main',
+    'sp-compare=spectrumpy.pipelines.compare_spectrum:main',
 ]
 pymodules = [
     'spectrumpy/pipelines/help',
@@ -56,6 +58,8 @@ pymodules = [
     'spectrumpy/pipelines/correct_image',
     'spectrumpy/pipelines/evaluate_velocity_resolution',
     'spectrumpy/pipelines/save_calibrated_spectrum',
+    'spectrumpy/pipelines/smooth_spectrum',
+    'spectrumpy/pipelines/compare_spectrum',
 ]
 
 setup(
