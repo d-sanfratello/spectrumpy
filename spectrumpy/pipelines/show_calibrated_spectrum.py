@@ -6,7 +6,11 @@ import h5py
 from pathlib import Path
 
 from spectrumpy.core import Spectrum, CalibratedSpectrum
-from spectrumpy.io import parse_spectrum_path, parse_data_path
+from spectrumpy.io import (parse_spectrum_path,
+                           parse_data_path,
+                           parse_lines,
+                           parse_line_names)
+#FIXME: use parse_lines_names somewhere.
 from spectrumpy.bayes_inference import models as mod
 
 
@@ -150,8 +154,10 @@ def main():
                 cal_add_spectrum = cal_add_spectrum.normalize()
 
     lines = None
-    if args.lines is not None:
+    if args.lines is not None and not calibrated:
         lines = spectrum.dataset.lines
+    elif args.lines is not None and calibrated:
+        lines = parse_lines(args, data_name='lines')
 
     cal_spectrum.show(
         show=True, save=(args.out_file is not None),
