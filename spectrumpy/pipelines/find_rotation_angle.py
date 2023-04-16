@@ -35,7 +35,6 @@ def main():
     parser.add_argument("-B", "--model-bounds",
                         dest="mod_bounds",
                         default=None,
-                        required=True,
                         help="The bounds for the model parameters. Write "
                              "from highest to lowest order.")
     parser.add_argument("--tentative", action='store_true',
@@ -51,6 +50,13 @@ def main():
         args,
         data_name='data_path'
     )
+
+    if mod_bounds is not None:
+        angles = mod_bounds[0]
+        low_m = np.tan(np.deg2rad(angles[0]))
+        high_m = np.tan(np.deg2rad(angles[1]))
+
+        mod_bounds[0] = [low_m, high_m]
 
     if not args.postprocess:
         nlive, maxmcmc = parse_tentative(args)
