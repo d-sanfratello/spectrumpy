@@ -86,14 +86,38 @@ def parse_data_path(arg_list,
     data_file = Path(getattr(arg_list, data_name))
     data = np.genfromtxt(data_file, names=True)
 
-    names = data.dtype.names
+    names = np.array(data.dtype.names)
 
-    x = data[names[0]]
-    dx = data[names[1]]
-    y = data[names[2]]
-    dy = data[names[3]]
+    x_id = np.where(names == 'x')
+    dx_id = np.where(names == 'dx')
+
+    y_id = np.where(names == 'y')
+    if len(list(y_id[0])) == 0:
+        y_id = np.where(names == 'l')
+        dy_id = np.where(names == 'dl')
+    else:
+        dy_id = np.where(names == 'dy')
+
+    x = data[names[x_id]].astype(float)
+    dx = data[names[dx_id]].astype(float)
+    y = data[names[y_id]].astype(float)
+    dy = data[names[dy_id]].astype(float)
 
     return x, dx, y, dy
+
+
+def parse_lines(arg_list, data_name, **kwargs):
+    data_file = Path(getattr(arg_list, data_name))
+    data = np.genfromtxt(data_file)
+
+    return data
+
+
+def parse_line_names(arg_list, data_name, **kwargs):
+    data_file = Path(getattr(arg_list, data_name))
+    names = np.genfromtxt(data_file, dtype=str)
+
+    return names
 
 
 def parse_bounds(args):
