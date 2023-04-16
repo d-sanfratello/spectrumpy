@@ -55,18 +55,14 @@ def main():
         first_model = models[0]
         name = f"slice {slices[0]}"
         models.pop(0)
-        x_len = len(first_model.spectrum)
-        x_sup = x_len - 1
         labels = [f"slice {sl}" for sl in slices[1:]]
 
         first_model.show(model=models,
-                         x=np.linspace(0, x_sup, x_len),
                          legend=True,
                          show=True,
                          save=False,
                          label=name,
-                         model_label=labels,
-                         calibration=False)
+                         model_label=labels)
 
 
 if __name__ == "__main__":
