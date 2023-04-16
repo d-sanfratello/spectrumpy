@@ -46,6 +46,10 @@ def main():
                         help="shows a calibrated spectrum.")
     parser.add_argument("--save-calibrated", action='store_true',
                         help="saves the calibrated spectrum into a file.")
+    parser.add_argument("--smooth", action='store_true',
+                        help="smooths a spectrum to retrieve the continuum.")
+    parser.add_argument("--compare", action='store_true',
+                        help="compares two spectra by evaluating their ratio.")
     parser.add_argument("--velocity-resolution", action='store_true',
                         help="given the distance between two lines and their "
                              "region, it estimates the radial velocity "
