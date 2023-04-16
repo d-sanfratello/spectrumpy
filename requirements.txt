@@ -2,6 +2,7 @@ astropy
 matplotlib
 numpy<=1.23.0
 scipy
+loess
 
 pkgconfig
 h5py
