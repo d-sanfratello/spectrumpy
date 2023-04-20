@@ -5,6 +5,7 @@ import numpy as np
 import os
 import argparse as ag
 
+from matplotlib.pyplot import show
 from pathlib import Path
 
 from spectrumpy.bayes_inference import RotationFit
@@ -124,6 +125,7 @@ def main():
         ),
         bbox_inches='tight'
     )
+    show()
 
 
 if __name__ == "__main__":
