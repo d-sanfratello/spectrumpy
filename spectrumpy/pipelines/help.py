@@ -50,6 +50,9 @@ def main():
                         help="smooths a spectrum to retrieve the continuum.")
     parser.add_argument("--compare", action='store_true',
                         help="compares two spectra by evaluating their ratio.")
+    parser.add_argument("--find-line", action='store_true',
+                        help="Finds the Voigt profile of a line within a "
+                             "spectrum.")
     parser.add_argument("--velocity-resolution", action='store_true',
                         help="given the distance between two lines and their "
                              "region, it estimates the radial velocity "

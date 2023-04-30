@@ -41,6 +41,7 @@ scripts = [
     'sp-save-calibrated=spectrumpy.pipelines.save_calibrated_spectrum:main',
     'sp-smooth=spectrumpy.pipelines.smooth_spectrum:main',
     'sp-compare=spectrumpy.pipelines.compare_spectrum:main',
+    'sp-find-line=spectrumpy.pipelines.fit_line:main',
 ]
 pymodules = [
     'spectrumpy/pipelines/help',
@@ -60,6 +61,7 @@ pymodules = [
     'spectrumpy/pipelines/save_calibrated_spectrum',
     'spectrumpy/pipelines/smooth_spectrum',
     'spectrumpy/pipelines/compare_spectrum',
+    'spectrumpy/pipelines/fit_line',
 ]
 
 setup(
