@@ -77,6 +77,21 @@ class SpectrumImage:
         if legend:
             ax.legend(loc='best')
 
+        img_size = self.image.shape
+        wh_ratio = img_size[1] / img_size[0]
+
+        if wh_ratio > 5:
+            wh_ratio = 5
+
+        if img_size[1] >= img_size[0]:  # wider than tall
+            new_height = fig.get_figwidth() / wh_ratio
+            fig.set_figheight(new_height)
+        else:  # taller than wide
+            new_width = fig.get_figwidth() * wh_ratio
+            fig.set_figwidth(new_width)
+
+        fig.tight_layout()
+
         if save:
             fig.savefig(name)
         if show:
