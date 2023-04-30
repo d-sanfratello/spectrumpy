@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import warnings
 
-from scipy.ndimage import median_filter
+from loess.loess_1d import loess_1d
 
 
 class CalibratedSpectrum:
@@ -63,12 +64,12 @@ class CalibratedSpectrum:
                 linestyle='solid', color='black', linewidth=0.5,
                 label=label1)
 
-        if 'xlim' in kwargs.keys():
+        if 'xlim' in kwargs.keys() and kwargs['xlim'] is not None:
             ax.set_xlim(kwargs['xlim'][0], kwargs['xlim'][1])
         else:
             ax.set_xlim(self.wl.min(), self.wl.max())
 
-        if 'ylim' in kwargs.keys():
+        if 'ylim' in kwargs.keys() and kwargs['ylim'] is not None:
             ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
 
         ax.set_xlabel(f"[{self.units}]")
@@ -102,11 +103,16 @@ class CalibratedSpectrum:
             units=self.units
         )
 
-    def smooth(self, size):
-        smoothed = median_filter(self.spectrum, size=size)
+    def smooth(self, frac=0.2):
+        wl, smoothed, w = loess_1d(
+            self.wl,
+            self.sp,
+            degree=2,
+            frac=frac
+        )
 
         return CalibratedSpectrum(
-            wavelength=np.asarray(self.wl),
+            wavelength=np.asarray(wl),
             spectrum=np.asarray(smoothed),
             units=self.units
         )
@@ -122,9 +128,32 @@ class CalibratedSpectrum:
 
     @classmethod
     def compare(cls, spectrum1, spectrum2):
-        if not np.all(spectrum1 == spectrum2):
+        if not np.all(spectrum1.wl == spectrum2.wl):
             raise ValueError(
                 "Spectra must have the same calibration."
             )
+        if not spectrum1.units == spectrum2.units:
+            raise ValueError(
+                "Spectra must have the same units."
+            )
 
-        return spectrum1.wl, spectrum1 / spectrum2
+        idx_2_is_zero = np.argwhere(spectrum2.sp == 0)
+        mask = np.ones(spectrum1.wl.shape, dtype=bool)
+        mask[idx_2_is_zero] = False
+
+        wl = spectrum1.wl[mask]
+        sp1 = spectrum1.sp[mask]
+        sp2 = spectrum2.sp[mask]
+        units = spectrum1.units
+
+        inverse_mask = np.logical_not(mask.copy())
+        removed_points = len(np.argwhere(inverse_mask is False))
+
+        if removed_points > 0:
+            warnings.warn(
+                f"Removed {removed_points} point(s) as they where 0 in divisor"
+                f" array. Removed wavelengths are at: "
+                f"{spectrum1.wl[inverse_mask]} {units}."
+            )
+
+        return wl, sp1 / sp2, units
