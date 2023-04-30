@@ -69,9 +69,12 @@ def main():
     with h5py.File(out_name, 'w') as f:
         f.create_dataset('wavelength', data=cal_spectrum.wl)
         f.create_dataset('spectrum', data=cal_spectrum.sp)
-        units = cal_spectrum.units.astype(
-            h5py.string_dtype(encoding='utf-8')
-        )
+
+        units = cal_spectrum.units
+        if not isinstance(units, str):
+            units = units.astype(
+                h5py.string_dtype(encoding='utf-8')
+            )
         f.create_dataset('units', data=units)
 
 
