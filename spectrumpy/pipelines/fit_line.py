@@ -248,7 +248,7 @@ def main():
         for _ in range(samples.shape[0])
     ])
     l, m, h = np.percentile(model,
-                            [16, 50, 95], axis=0)
+                            [16, 50, 84], axis=0)
 
     ax.plot(x, m, lw=0.8, color='r')
     ax.fill_between(x, l, h, facecolor='red', alpha=0.25)
