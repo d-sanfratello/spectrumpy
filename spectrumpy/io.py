@@ -89,7 +89,11 @@ def parse_data_path(arg_list,
     names = np.array(data.dtype.names)
 
     x_id = np.where(names == 'x')
-    dx_id = np.where(names == 'dx')
+    if len(list(x_id[0])) == 0:
+        x_id = np.where(names == 'px')
+        dx_id = np.where(names == 'dpx')
+    else:
+        dx_id = np.where(names == 'dx')
 
     y_id = np.where(names == 'y')
     if len(list(y_id[0])) == 0:
