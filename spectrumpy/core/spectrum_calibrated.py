@@ -19,6 +19,7 @@ class CalibratedSpectrum:
              overlay_spectrum=None,
              labels=None,
              lines=None,
+             ylabel=None,
              *args, **kwargs):
 
         fig = plt.figure(*args)
@@ -27,9 +28,9 @@ class CalibratedSpectrum:
         if 'title' in kwargs.keys():
             ax.set_title(kwargs['title'])
 
-        ax.grid()
+        # ax.grid()
 
-        fig = self._show_calibrated(fig, labels=labels,
+        fig = self._show_calibrated(fig, labels=labels, ylabel=ylabel,
                                     overlay_spectrum=overlay_spectrum,
                                     lines=lines, model=model, **kwargs)
 
@@ -49,6 +50,7 @@ class CalibratedSpectrum:
     def _show_calibrated(self,
                          fig,
                          labels=None,
+                         ylabel=None,
                          overlay_spectrum=None,
                          lines=None,
                          **kwargs):
@@ -60,6 +62,13 @@ class CalibratedSpectrum:
                 label2 = labels[1]
 
         ax = fig.gca()
+
+        if lines is not None:
+            for lam in lines:
+                ax.axvline(lam,
+                           ymin=0, ymax=1, linewidth=0.5, color='navy',
+                           linestyle='-', alpha=0.5)
+
         ax.plot(self.wl, self.sp,
                 linestyle='solid', color='black', linewidth=0.5,
                 label=label1)
@@ -73,12 +82,10 @@ class CalibratedSpectrum:
             ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
 
         ax.set_xlabel(f"[{self.units}]")
-
-        if lines is not None:
-            for lam in lines:
-                ax.axvline(lam,
-                           ymin=0, ymax=1, linewidth=0.5, color='navy',
-                           linestyle='dashed')
+        if ylabel is None:
+            ax.set_ylabel(r'[arb.units]')
+        else:
+            ax.set_ylabel(f"{ylabel}")
 
         if overlay_spectrum is not None:
             ax.plot(
