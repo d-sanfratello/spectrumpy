@@ -118,6 +118,7 @@ class Spectrum:
             ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
 
         ax.set_xlabel(r'[px]')
+        ax.set_ylabel(r'[arb.units]')
 
         return fig
 
