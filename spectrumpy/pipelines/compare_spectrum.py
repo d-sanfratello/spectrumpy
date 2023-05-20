@@ -92,6 +92,7 @@ def main():
         name=out_file,
         legend=(label is not None),
         labels=label,
+        ylabel="",
         ylim=ylim,
     )
 

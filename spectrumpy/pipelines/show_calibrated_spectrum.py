@@ -53,6 +53,8 @@ def main():
     parser.add_argument('--labels', dest="labels", default=None,
                         help="A comma-separated-string containing the labels "
                              "for the spectrum(a).")
+    parser.add_argument("--ylabel", dest='ylabel', default=None,
+                        help="if set, this is the ylabel of the plot.")
     parser.add_argument("--normalized", dest='normalized',
                         action='store_true', default=False,
                         help="if set, this flag normalizes the spectra "
@@ -96,6 +98,10 @@ def main():
     labels = None
     if args.labels is not None:
         labels = args.labels.split(',')
+
+    ylabel = None
+    if args.ylabel is not None:
+        ylabel = args.ylabel
 
     if not calibrated:
         with h5py.File(Path(args.calibration).joinpath(
@@ -165,6 +171,7 @@ def main():
         legend=(args.labels is not None),
         overlay_spectrum=cal_add_spectrum,
         labels=labels,
+        ylabel=ylabel,
         lines=lines
     )
 
