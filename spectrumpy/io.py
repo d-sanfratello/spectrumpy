@@ -117,13 +117,6 @@ def parse_lines(arg_list, data_name, **kwargs):
     return data
 
 
-def parse_line_names(arg_list, data_name, **kwargs):
-    data_file = Path(getattr(arg_list, data_name))
-    names = np.genfromtxt(data_file, dtype=str)
-
-    return names
-
-
 def parse_bounds(args):
     if not args.postprocess and args.mod_bounds is None:
         raise ValueError(

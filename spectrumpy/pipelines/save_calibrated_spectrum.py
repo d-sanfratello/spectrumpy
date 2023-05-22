@@ -5,7 +5,7 @@ import h5py
 
 from pathlib import Path
 
-from spectrumpy.io import parse_spectrum_path, parse_data_path
+from spectrumpy.io import parse_spectrum_path
 from spectrumpy.bayes_inference import models as mod
 
 

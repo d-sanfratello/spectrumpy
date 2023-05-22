@@ -8,9 +8,7 @@ from pathlib import Path
 from spectrumpy.core import Spectrum, CalibratedSpectrum
 from spectrumpy.io import (parse_spectrum_path,
                            parse_data_path,
-                           parse_lines,
-                           parse_line_names)
-#FIXME: use parse_lines_names somewhere.
+                           parse_lines)
 from spectrumpy.bayes_inference import models as mod
 
 
