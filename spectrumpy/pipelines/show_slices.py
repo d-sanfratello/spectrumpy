@@ -1,4 +1,3 @@
-import numpy as np
 import argparse as ag
 
 from spectrumpy.io import parse_image_path
