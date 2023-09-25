@@ -150,7 +150,7 @@ class Spectrum:
                         ms=2)
         else:
             ax.errorbar(px, lam, s_lam*errorscale, s_px*errorscale,
-                        label=f"Errorbars are scaled by a factor of"
+                        label=f"Error bars are scaled by a factor of"
                               f" {errorscale}",
                         capsize=2, linestyle='',
                         ms=2)
